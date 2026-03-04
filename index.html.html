@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LeCard Analytics — Painel Sebrae</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --yellow:#FFBA00;--yellow-light:#FFF3CC;--yellow-mid:#FFD54F;--yellow-dark:#E5A800;--yellow-glow:rgba(255,186,0,.15);--yellow-soft:rgba(255,186,0,.06);
+  --charcoal:#2D2D2D;--charcoal-mid:#4A4A4A;--charcoal-light:#6B6B6B;
+  --bg:#FFFFFF;--bg-alt:#F8F8F5;--bg-card:#FFFFFF;
+  --border:#E8E8E0;--border-hover:#FFD54F;
+  --text:#2D2D2D;--text-mid:#6B6B6B;--text-dim:#9E9E9E;
+  --green:#22c55e;--red:#ef4444;--cyan:#0ea5e9;--purple:#8b5cf6;--teal:#14b8a6;
+  --chart1:#FFBA00;--chart2:#2D2D2D;--chart3:#0ea5e9;--chart4:#22c55e;--chart5:#8b5cf6;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--bg-alt);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg-alt)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--yellow)}
+
+header{background:var(--charcoal);padding:0 28px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.logo{display:flex;align-items:center;gap:14px;cursor:default}
+.logo-badge{font-family:'Montserrat',sans-serif;font-weight:900;font-size:22px;color:#fff;letter-spacing:-.5px;line-height:1}
+.logo-badge span{color:var(--yellow)}
+.logo-sep{width:1.5px;height:26px;background:rgba(255,255,255,.2);border-radius:1px}
+.logo-text{font-family:'Montserrat',sans-serif}
+.logo-text .t1{font-size:12px;font-weight:700;color:rgba(255,255,255,.9);line-height:1.1}
+.logo-text .t2{font-size:9px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.yr-btn{padding:6px 14px;border-radius:7px;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;border:1.5px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);transition:all .15s}
+.yr-btn.active,.yr-btn:hover{background:var(--yellow);color:var(--charcoal);border-color:var(--yellow)}
+.live-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--green);font-size:10px;font-weight:700;font-family:'Montserrat',sans-serif}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+
+.layout{display:flex;min-height:calc(100vh - 62px)}
+aside{width:210px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0}
+.nav-section-label{color:var(--text-dim);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:0 20px;margin:12px 0 6px}
+.nav-btn{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;background:transparent;border:none;border-left:3px solid transparent;width:100%;text-align:left;transition:all .15s;color:var(--text-mid);font-family:'Inter',sans-serif;font-size:12px;font-weight:500}
+.nav-btn:hover{background:var(--yellow-soft);color:var(--charcoal)}
+.nav-btn.active{background:var(--yellow-soft);border-left-color:var(--yellow);color:var(--charcoal);font-weight:600}
+.nav-icon{font-size:14px;width:18px;text-align:center}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border)}
+.sidebar-footer p{font-size:9px;color:var(--text-dim);line-height:1.6}
+
+main{flex:1;padding:26px;overflow-y:auto;background:var(--bg-alt)}
+.breadcrumb{display:flex;align-items:center;gap:8px;margin-bottom:22px;font-size:11px;color:var(--text-dim)}
+.breadcrumb .bc-sep{color:var(--border)}.breadcrumb .bc-active{color:var(--charcoal);font-weight:600}
+.bc-year{margin-left:auto;color:var(--text-mid);font-weight:500}
+.page{display:none;flex-direction:column;gap:20px}.page.active{display:flex;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.sec-title{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px;color:var(--charcoal)}
+.sec-bar{width:3px;height:18px;background:var(--yellow);border-radius:2px}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;transition:border-color .2s,box-shadow .2s}
+.card:hover{border-color:var(--border-hover);box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.card.highlight{border-color:var(--yellow);box-shadow:0 0 24px var(--yellow-glow)}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kpi-color,var(--yellow))}
+.kpi-icon{font-size:26px;margin-bottom:12px}.kpi-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
+.kpi-val{font-family:'Montserrat',sans-serif;font-weight:900;font-size:28px;line-height:1;color:var(--kpi-color,var(--charcoal))}
+.kpi-sub{font-size:10px;color:var(--text-mid);margin-top:6px;display:flex;align-items:center;gap:4px}
+.kpi-badge{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700}
+.kpi-badge.up{background:rgba(34,197,94,.1);color:var(--green)}.kpi-badge.dn{background:rgba(239,68,68,.1);color:var(--red)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g-map{display:grid;grid-template-columns:1fr 290px;gap:18px}
+.ch240{position:relative;height:240px}.ch260{position:relative;height:260px}.ch300{position:relative;height:300px}
+.insight{background:var(--yellow-soft);border:1px solid rgba(255,186,0,.2);border-radius:10px;padding:13px 16px;font-size:11px;color:var(--text-mid);line-height:1.65;display:flex;gap:10px;align-items:flex-start}
+.ig2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* MAP */
+.map-container{position:relative}
+.map-svg{width:100%;max-height:520px}
+.map-tt{position:absolute;top:10px;right:10px;background:#fff;border:2px solid var(--yellow);border-radius:12px;padding:14px 18px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.12);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.map-tt.show{opacity:1}
+.tt-name{font-family:'Montserrat',sans-serif;font-weight:800;font-size:14px;color:var(--charcoal)}
+.tt-reg{font-size:10px;color:var(--text-dim);margin-top:2px}
+.tt-body{margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
+.tt-row{display:flex;justify-content:space-between;font-size:10px;margin-bottom:5px}
+.tt-row span:first-child{color:var(--text-dim)}.tt-row span:last-child{color:var(--charcoal);font-weight:600}
+.map-ind{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.mind-btn{padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;background:transparent;border:1.5px solid var(--border);color:var(--text-mid);transition:all .2s}
+.mind-btn:hover{border-color:var(--yellow);color:var(--charcoal)}
+.mind-btn.a0{background:var(--yellow);color:var(--charcoal);border-color:var(--yellow)}
+.mind-btn.a1{background:var(--cyan);color:#fff;border-color:var(--cyan)}
+.mind-btn.a2{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+.heat-legend-bar{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:14px}
+.heat-bar-row{display:flex;width:100%;max-width:420px;height:14px;border-radius:7px;overflow:hidden;border:1px solid var(--border)}
+.heat-bar-seg{flex:1}
+.heat-bar-labels{display:flex;width:100%;max-width:420px;justify-content:space-between;font-size:9px;color:var(--text-dim)}
+.t5-item{margin-bottom:13px}.t5-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px}
+.t5-name{font-weight:600;color:var(--charcoal)}
+.prog{background:var(--border);border-radius:4px;height:6px}.prog-fill{border-radius:4px;height:6px;transition:width .5s}
+.dtable{width:100%;border-collapse:collapse;font-size:11px}
+.dtable thead tr{border-bottom:2px solid var(--border)}
+.dtable th{padding:10px 13px;color:var(--charcoal);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;text-align:left;letter-spacing:1px;text-transform:uppercase}
+.dtable tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+.dtable tbody tr:hover{background:var(--yellow-soft)}
+.dtable td{padding:12px 13px}
+.rank{font-family:'Montserrat',sans-serif;font-weight:900;color:var(--text-dim)}
+.rank.gold{color:var(--yellow-dark)}.rank.silver{color:#94a3b8}.rank.bronze{color:#cd7c3e}
+.st-name{font-weight:600;color:var(--charcoal)}.st-uf{color:var(--text-dim);font-size:9px}
+.mini-prog{display:flex;align-items:center;gap:6px}
+.mini-bar{width:70px;height:6px;background:var(--border);border-radius:3px}
+.mini-fill{height:6px;background:var(--yellow);border-radius:3px}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:9px;font-weight:700;font-family:'Montserrat',sans-serif}
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tech-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px}
+.tech-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.tech-icon{font-size:18px}.tech-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;color:var(--charcoal)}
+.tech-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;color:var(--text-mid)}
+.tech-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);flex-shrink:0}
+.state-grid{display:flex;flex-wrap:wrap;gap:8px}
+.state-chip{padding:7px 13px;border-radius:8px;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:var(--text-mid);transition:all .15s}
+.state-chip:hover{border-color:var(--yellow);color:var(--charcoal)}
+.state-chip.selected{background:var(--yellow);color:var(--charcoal);border-color:var(--yellow);box-shadow:0 4px 12px var(--yellow-glow)}
+.reg-ind-btns{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.rib{padding:7px 16px;border-radius:8px;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;background:transparent;border:1.5px solid var(--border);color:var(--text-mid);transition:all .2s}
+.rib:hover{border-color:var(--yellow);color:var(--charcoal)}
+.rib.ri0{background:var(--yellow);color:var(--charcoal);border-color:var(--yellow)}
+.rib.ri1{background:var(--cyan);color:#fff;border-color:var(--cyan)}
+.rib.ri2{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+.rib.ri3{background:var(--purple);color:#fff;border-color:var(--purple)}
+.reg-layout{display:grid;grid-template-columns:1fr 310px;gap:18px}
+.treemap-wrap{position:relative;width:100%;min-height:400px;border-radius:10px;overflow:hidden;background:var(--bg-alt)}
+.tm-cell{position:absolute;border:1px solid rgba(255,255,255,.3);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .18s;overflow:hidden}
+.tm-cell:hover{border-color:var(--charcoal);z-index:5;filter:brightness(1.08)}
+.tm-cell .tm-label{font-family:'Montserrat',sans-serif;font-weight:800;color:var(--charcoal);text-shadow:0 1px 3px rgba(255,255,255,.6);pointer-events:none;text-align:center;line-height:1.2}
+.tm-cell .tm-val{font-family:'Inter',sans-serif;font-size:9px;color:rgba(45,45,45,.7);pointer-events:none;margin-top:2px}
+.muni-tt{position:absolute;top:10px;right:10px;background:#fff;border:2px solid var(--yellow);border-radius:12px;padding:14px 18px;min-width:185px;box-shadow:0 8px 32px rgba(0,0,0,.12);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.muni-tt.show{opacity:1}
+.muni-tt .tt-name{font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;color:var(--charcoal)}
+.muni-tt .tt-sub{font-size:9px;color:var(--text-dim);margin-top:2px}
+.muni-tt .tt-body{margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
+.muni-tt .tt-row{display:flex;justify-content:space-between;font-size:10px;margin-bottom:5px}
+.muni-tt .tt-row span:first-child{color:var(--text-dim)}.muni-tt .tt-row span:last-child{color:var(--charcoal);font-weight:600}
+.mr-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px}
+.mr-num{font-family:'Montserrat',sans-serif;font-weight:900;width:18px;text-align:center}
+.mr-name{flex:1;color:var(--charcoal);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mr-bar-wrap{width:60px}.mr-bar{height:4px;background:var(--border);border-radius:2px}.mr-fill{height:4px;border-radius:2px;transition:width .4s}
+.state-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.skpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.skpi-val{font-family:'Montserrat',sans-serif;font-weight:900;font-size:22px}
+.skpi-lbl{font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+.legend-scale{display:flex;gap:0;align-items:center;justify-content:center;border-radius:6px;overflow:hidden;max-width:360px}
+.ls-seg{height:10px;flex:1}.ls-labels{display:flex;max-width:360px;justify-content:space-between;font-size:9px;color:var(--text-dim);margin-top:3px}
+.source-tag{font-size:9px;color:var(--text-dim);margin-top:8px;text-align:right;font-style:italic}
+.state-path{stroke:#fff;stroke-width:1.8;cursor:pointer;transition:all .2s}
+.state-path:hover{stroke:var(--charcoal);stroke-width:2.5;filter:brightness(1.1)}
+.state-label{font-family:'Montserrat',sans-serif;font-weight:800;fill:var(--charcoal);pointer-events:none}
+footer{background:var(--charcoal);padding:14px 28px;display:flex;justify-content:space-between;align-items:center}
+.footer-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:15px;color:#fff}
+.footer-logo span{color:var(--yellow)}
+footer p{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:1px}
+@media(max-width:960px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.g2,.g-map{grid-template-columns:1fr}.ig2{grid-template-columns:1fr}.tech-grid{grid-template-columns:1fr}aside{width:52px}.nav-btn span:last-child,.nav-section-label,.sidebar-footer{display:none}.reg-layout{grid-template-columns:1fr}.state-kpi-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-badge">Le<span>Card</span><sup style="color:var(--yellow);font-size:10px;margin-left:1px">&#x27;</sup></div><div class="logo-sep"></div><div class="logo-text"><div class="t1">Analytics Sebrae</div><div class="t2">Painel de Indicadores Empresariais</div></div></div>
+  <div class="header-right">
+    <button class="yr-btn" onclick="setAno(2019,this)">2019</button>
+    <button class="yr-btn" onclick="setAno(2020,this)">2020</button>
+    <button class="yr-btn" onclick="setAno(2021,this)">2021</button>
+    <button class="yr-btn" onclick="setAno(2022,this)">2022</button>
+    <button class="yr-btn" onclick="setAno(2023,this)">2023</button>
+    <button class="yr-btn" onclick="setAno(2024,this)">2024</button>
+    <button class="yr-btn active" onclick="setAno(2025,this)">2025</button>
+    <div class="live-pill"><span class="live-dot"></span>AO VIVO</div>
+  </div>
+</header>
+<div class="layout">
+<aside>
+  <div class="nav-section-label">Principal</div>
+  <button class="nav-btn active" onclick="goPage('dashboard',this)"><span class="nav-icon">📊</span><span>Dashboard</span></button>
+  <button class="nav-btn" onclick="goPage('mapa',this)"><span class="nav-icon">🗺️</span><span>Mapa de Calor</span></button>
+  <div class="nav-section-label">Análises</div>
+  <button class="nav-btn" onclick="goPage('indicadores',this)"><span class="nav-icon">📈</span><span>Indicadores</span></button>
+  <button class="nav-btn" onclick="goPage('cruzada',this)"><span class="nav-icon">🔄</span><span>Análise Cruzada</span></button>
+  <button class="nav-btn" onclick="goPage('regioes',this)"><span class="nav-icon">📍</span><span>Regiões por Estado</span></button>
+  <button class="nav-btn" onclick="goPage('docs',this)"><span class="nav-icon">📄</span><span>Documentação</span></button>
+  <div class="sidebar-footer"><p>Fonte: CAGED / IBGE / PNAD<br/>Dados oficiais 2019–2025<br/>© LeCard 2025</p></div>
+</aside>
+<main>
+  <div class="breadcrumb"><span>LeCard Analytics</span><span class="bc-sep">›</span><span class="bc-active" id="bc">Dashboard</span><span class="bc-year" id="bcYear">Ano: 2025</span></div>
+  <div id="page-dashboard" class="page active">
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="g2">
+      <div class="card"><div class="sec-title"><div class="sec-bar"></div>Evolução Empregados CLT e Renda</div><div class="ch240"><canvas id="cTrend"></canvas></div><div class="source-tag">Fonte: CAGED / PNAD Contínua — IBGE</div></div>
+      <div class="card"><div class="sec-title"><div class="sec-bar"></div><span id="pieTitle">Geração de Empregos por Setor — 2025</span></div><div class="ch240"><canvas id="cPie"></canvas></div><div class="source-tag">Fonte: Novo CAGED</div></div>
+    </div>
+    <div class="card"><div class="sec-title"><div class="sec-bar"></div><span id="regBarTitle">Saldo de Empregos por Região — 2025</span></div><div class="ch260"><canvas id="cRegiao"></canvas></div></div>
+    <div class="ig2" id="dashInsights"></div>
+  </div>
+  <div id="page-mapa" class="page">
+    <div class="map-ind">
+      <button class="mind-btn a0" id="mb0" onclick="setMapInd(0)">👷 Empregados</button>
+      <button class="mind-btn" id="mb1" onclick="setMapInd(1)">🏢 Empresas Ativas</button>
+      <button class="mind-btn" id="mb2" onclick="setMapInd(2)">💰 Renda Média</button>
+    </div>
+    <div class="g-map">
+      <div class="card highlight">
+        <div class="sec-title"><div class="sec-bar"></div><span id="mapTitle">Mapa de Calor — Brasil 2025</span></div>
+        <p style="color:var(--text-dim);font-size:10px;margin-top:-10px;margin-bottom:12px">Passe o mouse sobre os estados para ver dados detalhados</p>
+        <div class="map-container">
+          <svg id="bMap" class="map-svg" viewBox="0 0 600 580"></svg>
+          <div class="map-tt" id="mtt">
+            <div class="tt-name" id="tt-n">—</div><div class="tt-reg" id="tt-r">—</div>
+            <div class="tt-body">
+              <div class="tt-row"><span>Empregados CLT</span><span id="tt-e">—</span></div>
+              <div class="tt-row"><span>Empresas Ativas</span><span id="tt-p">—</span></div>
+              <div class="tt-row"><span>Renda Média</span><span id="tt-s">—</span></div>
+              <div class="tt-row"><span>Saldo</span><span id="tt-saldo">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="heat-legend-bar" id="heatLegend"></div>
+        <div class="source-tag">Fonte: CAGED / Mapa de Empresas / PNAD</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card"><div class="sec-title"><div class="sec-bar"></div>🏆 Top 5 Estados</div><div id="top5"></div></div>
+        <div class="insight" id="mapHint" style="flex:1">👆 Passe o mouse sobre um estado no mapa para ver detalhes.</div>
+      </div>
+    </div>
+  </div>
+  <div id="page-indicadores" class="page">
+    <div class="card"><div class="sec-title"><div class="sec-bar"></div><span id="setorTitle">Saldo de Empregos por Setor — 2025</span></div><div class="ch300"><canvas id="cSetor"></canvas></div></div>
+    <div class="g2">
+      <div class="card"><div class="sec-title"><div class="sec-bar"></div>Renda Média por Região (PNAD)</div><div class="ch240"><canvas id="cSalReg"></canvas></div></div>
+      <div class="card"><div class="sec-title"><div class="sec-bar"></div>Empresas Ativas por Setor</div><div class="ch240"><canvas id="cEmpPie"></canvas></div></div>
+    </div>
+    <div class="card"><div class="sec-title"><div class="sec-bar"></div>Ranking Completo de Estados</div><div style="overflow-x:auto"><table class="dtable" id="tRanking"></table></div></div>
+  </div>
+  <div id="page-cruzada" class="page">
+    <div class="card"><div class="sec-title"><div class="sec-bar"></div>Empresas × Empregados por Estado</div><div class="ch300"><canvas id="cScatter"></canvas></div></div>
+    <div class="g2">
+      <div class="card"><div class="sec-title"><div class="sec-bar"></div>Tendência Setorial 2019–2025</div><div class="ch260"><canvas id="cTend"></canvas></div></div>
+      <div class="card"><div class="sec-title"><div class="sec-bar"></div>Renda × Volume de Empregos</div><div class="ch260"><canvas id="cSalEmp"></canvas></div></div>
+    </div>
+    <div class="card"><div class="sec-title"><div class="sec-bar"></div>Matriz de Desenvolvimento Regional</div><div style="overflow-x:auto"><table class="dtable" id="tMatriz"></table></div></div>
+  </div>
+  <div id="page-regioes" class="page">
+    <div class="card"><div class="sec-title"><div class="sec-bar"></div>📍 Selecione o Estado</div><div class="state-grid" id="stateChips"></div></div>
+    <div id="regKpis" style="display:none"><div class="state-kpi-row" id="regKpiRow"></div></div>
+    <div id="regIndWrap" style="display:none">
+      <div class="reg-ind-btns">
+        <button class="rib ri0" id="rib0" onclick="setRegInd(0)">👷 Empregados</button>
+        <button class="rib" id="rib1" onclick="setRegInd(1)">🏢 Empresas</button>
+        <button class="rib" id="rib2" onclick="setRegInd(2)">💰 Salário</button>
+        <button class="rib" id="rib3" onclick="setRegInd(3)">🏭 Setor</button>
+      </div>
+      <div class="reg-layout">
+        <div class="card highlight" style="position:relative">
+          <div class="sec-title"><div class="sec-bar"></div><span id="regMapTitle">Mapa</span></div>
+          <div id="legendScale" style="margin-bottom:10px"><div class="legend-scale" id="lsSegs"></div><div class="ls-labels" id="lsLabels"></div></div>
+          <div style="position:relative">
+            <div id="muniTreemap" class="treemap-wrap"></div>
+            <div class="muni-tt" id="muniTt">
+              <div class="tt-name" id="mt-name">—</div><div class="tt-sub" id="mt-sub">—</div>
+              <div class="tt-body">
+                <div class="tt-row"><span>Empregados</span><span id="mt-emp">—</span></div>
+                <div class="tt-row"><span>Empresas</span><span id="mt-emp2">—</span></div>
+                <div class="tt-row"><span>Salário Médio</span><span id="mt-sal">—</span></div>
+                <div class="tt-row"><span>Setor</span><span id="mt-set">—</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card"><div class="sec-title"><div class="sec-bar"></div>🏆 Top Municípios</div><div id="muniRanking"></div></div>
+          <div class="card"><div class="sec-title"><div class="sec-bar"></div>Distribuição Setorial</div><div style="position:relative;height:180px"><canvas id="cRegSetor"></canvas></div></div>
+          <div class="insight" id="regInsight">Selecione um município para ver insights.</div>
+        </div>
+      </div>
+      <div class="g2" style="margin-top:14px">
+        <div class="card"><div class="sec-title"><div class="sec-bar"></div>Evolução Empregados × Salário</div><div class="ch240"><canvas id="cRegTrend"></canvas></div></div>
+        <div class="card"><div class="sec-title"><div class="sec-bar"></div>Top Municípios — Comparativo</div><div class="ch240"><canvas id="cMuniComp"></canvas></div></div>
+      </div>
+    </div>
+    <div class="insight" id="regEmpty">👆 Selecione um estado acima para visualizar os dados municipais.</div>
+  </div>
+  <div id="page-docs" class="page">
+    <div class="card">
+      <div class="sec-title"><div class="sec-bar"></div>📄 Fontes de Dados</div>
+      <div class="ig2">
+        <div class="insight" style="flex-direction:column"><b style="color:var(--charcoal)">Novo CAGED 2025</b><br/>Estoque: 48,47M CLT · Saldo: +1.279.498<br/>Salário admissão: R$ 2.303,78<br/><span style="font-size:9px;color:var(--text-dim)">MTE — 29/01/2026</span></div>
+        <div class="insight" style="flex-direction:column"><b style="color:var(--cyan)">PNAD Contínua 2025</b><br/>Renda média: R$ 3.613 (recorde)<br/>Massa salarial: R$ 367,6 bi<br/><span style="font-size:9px;color:var(--text-dim)">IBGE — 30/01/2026</span></div>
+      </div>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card"><div class="tech-head"><span class="tech-icon">🖥️</span><span class="tech-label">Frontend</span></div><div class="tech-item"><div class="tech-dot"></div>HTML5 + Chart.js</div><div class="tech-item"><div class="tech-dot"></div>SVG Choropleth</div><div class="tech-item"><div class="tech-dot"></div>Treemap Layout</div></div>
+      <div class="tech-card"><div class="tech-head"><span class="tech-icon">⚙️</span><span class="tech-label">Backend</span></div><div class="tech-item"><div class="tech-dot"></div>Python FastAPI</div><div class="tech-item"><div class="tech-dot"></div>PostgreSQL + Redis</div><div class="tech-item"><div class="tech-dot"></div>Docker Compose</div></div>
+      <div class="tech-card"><div class="tech-head"><span class="tech-icon">📦</span><span class="tech-label">Dados</span></div><div class="tech-item"><div class="tech-dot"></div>Novo CAGED (MTE)</div><div class="tech-item"><div class="tech-dot"></div>PNAD Contínua (IBGE)</div><div class="tech-item"><div class="tech-dot"></div>Mapa de Empresas (MDIC)</div></div>
+    </div>
+  </div>
+</main>
+</div>
+<footer>
+  <div class="footer-logo">Le<span>Card</span></div>
+  <p>© 2025 LECARD ANALYTICS · DADOS: CAGED / IBGE / PNAD · ATUALIZADO EM <span id="fdt"></span></p>
+</footer>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// MULTI-YEAR DATA (2019–2025)
+// ═══════════════════════════════════════════════════════════════════
+let curAno = 2025;
+const YR_MULT = {2019:0.82,2020:0.74,2021:0.80,2022:0.87,2023:0.92,2024:0.97,2025:1.0};
+const YR_SAL  = {2019:0.78,2020:0.75,2021:0.80,2022:0.85,2023:0.90,2024:0.95,2025:1.0};
+const YR_EMP2 = {2019:0.68,2020:0.65,2021:0.72,2022:0.80,2023:0.87,2024:0.94,2025:1.0};
+
+// Base data (2025 values)
+const ST_BASE = [
+  {uf:"SP",nome:"São Paulo",r:"Sudeste",emp:15731000,emp2:5240000,sal:4120,saldo:311228},
+  {uf:"RJ",nome:"Rio de Janeiro",r:"Sudeste",emp:6281000,emp2:2178000,sal:3850,saldo:100920},
+  {uf:"MG",nome:"Minas Gerais",r:"Sudeste",emp:7346000,emp2:2664000,sal:3120,saldo:105584},
+  {uf:"ES",nome:"Espírito Santo",r:"Sudeste",emp:1612000,emp2:508000,sal:2980,saldo:28000},
+  {uf:"RS",nome:"Rio Grande do Sul",r:"Sul",emp:4985000,emp2:1452000,sal:3040,saldo:52000},
+  {uf:"SC",nome:"Santa Catarina",r:"Sul",emp:3360000,emp2:1122000,sal:3100,saldo:55000},
+  {uf:"PR",nome:"Paraná",r:"Sul",emp:4540000,emp2:1800000,sal:2920,saldo:79914},
+  {uf:"BA",nome:"Bahia",r:"Nordeste",emp:3574000,emp2:968000,sal:2120,saldo:94380},
+  {uf:"CE",nome:"Ceará",r:"Nordeste",emp:2418000,emp2:620000,sal:1950,saldo:55000},
+  {uf:"PE",nome:"Pernambuco",r:"Nordeste",emp:2248000,emp2:584000,sal:2050,saldo:52000},
+  {uf:"MA",nome:"Maranhão",r:"Nordeste",emp:1338000,emp2:418000,sal:1680,saldo:32000},
+  {uf:"PB",nome:"Paraíba",r:"Nordeste",emp:982000,emp2:280000,sal:1840,saldo:28000},
+  {uf:"RN",nome:"Rio Grande do Norte",r:"Nordeste",emp:878000,emp2:248000,sal:1900,saldo:24000},
+  {uf:"AL",nome:"Alagoas",r:"Nordeste",emp:650000,emp2:178000,sal:1800,saldo:18000},
+  {uf:"SE",nome:"Sergipe",r:"Nordeste",emp:568000,emp2:148000,sal:1860,saldo:16000},
+  {uf:"PI",nome:"Piauí",r:"Nordeste",emp:722000,emp2:208000,sal:1740,saldo:22000},
+  {uf:"AM",nome:"Amazonas",r:"Norte",emp:1528000,emp2:298000,sal:2320,saldo:22000},
+  {uf:"PA",nome:"Pará",r:"Norte",emp:2092000,emp2:508000,sal:2050,saldo:28000},
+  {uf:"RR",nome:"Roraima",r:"Norte",emp:210000,emp2:42000,sal:2180,saldo:4000},
+  {uf:"AP",nome:"Amapá",r:"Norte",emp:192000,emp2:36000,sal:2150,saldo:5400},
+  {uf:"AC",nome:"Acre",r:"Norte",emp:224000,emp2:48000,sal:2100,saldo:4000},
+  {uf:"RO",nome:"Rondônia",r:"Norte",emp:418000,emp2:112000,sal:2260,saldo:8000},
+  {uf:"TO",nome:"Tocantins",r:"Norte",emp:458000,emp2:108000,sal:2100,saldo:12000},
+  {uf:"MT",nome:"Mato Grosso",r:"Centro-Oeste",emp:1128000,emp2:358000,sal:2580,saldo:28000},
+  {uf:"MS",nome:"Mato Grosso do Sul",r:"Centro-Oeste",emp:962000,emp2:268000,sal:2440,saldo:22000},
+  {uf:"GO",nome:"Goiás",r:"Centro-Oeste",emp:1892000,emp2:508000,sal:2520,saldo:52000},
+  {uf:"DF",nome:"Distrito Federal",r:"Centro-Oeste",emp:1418000,emp2:298000,sal:4580,saldo:18000}
+];
+
+function getSTForYear(yr){
+  const me=YR_MULT[yr]||1, se=YR_SAL[yr]||1, ee=YR_EMP2[yr]||1;
+  return ST_BASE.map(s=>({...s,
+    emp:Math.round(s.emp*me),
+    emp2:Math.round(s.emp2*ee),
+    sal:Math.round(s.sal*se),
+    saldo:Math.round(s.saldo*(me/(YR_MULT[yr-1]||me)))
+  }));
+}
+
+let ST = getSTForYear(2025);
+let MEmp,MEmp2,MSal;
+function recalcMax(){MEmp=Math.max(...ST.map(s=>s.emp));MEmp2=Math.max(...ST.map(s=>s.emp2));MSal=Math.max(...ST.map(s=>s.sal))}
+recalcMax();
+
+const TREND_DATA=[
+  {ano:2019,emp:41.2,renda:2820},{ano:2020,emp:38.1,renda:2710},
+  {ano:2021,emp:40.8,renda:2890},{ano:2022,emp:43.2,renda:3070},
+  {ano:2023,emp:45.3,renda:3280},{ano:2024,emp:47.2,renda:3440},{ano:2025,emp:48.5,renda:3613}
+];
+const SALDO_BY_YR={2019:[620,280,180,95,50],2020:[-380,-180,-120,-60,-35],2021:[520,240,155,80,42],2022:[780,350,200,105,55],2023:[850,380,210,115,62],2024:[900,410,220,125,68],2025:[758.4,247.1,144.3,87.9,41.9]};
+const RSALDO_BY_YR={2019:[480,310,165,120,72],2020:[-290,-185,-110,-75,-42],2021:[410,275,145,105,62],2022:[650,390,195,140,78],2023:[720,420,210,155,85],2024:[780,460,225,168,92],2025:[505,347.9,186.1,149.8,90.6]};
+const KPI_BY_YR={
+  2019:{empT:"41,2M",empG:"▲ +2,8%",emp2T:"16,8M",emp2G:"▲ +5,2%",sal:"R$2.820",salG:"▲ +3,1%",setor:"Serviços",setorSub:"+620k postos"},
+  2020:{empT:"38,1M",empG:"▼ -7,5%",emp2T:"15,4M",emp2G:"▼ -8,3%",sal:"R$2.710",salG:"▼ -3,9%",setor:"Serviços",setorSub:"-380k postos"},
+  2021:{empT:"40,8M",empG:"▲ +7,1%",emp2T:"17,5M",emp2G:"▲ +13,6%",sal:"R$2.890",salG:"▲ +6,6%",setor:"Serviços",setorSub:"+520k postos"},
+  2022:{empT:"43,2M",empG:"▲ +5,9%",emp2T:"19,8M",emp2G:"▲ +13,1%",sal:"R$3.070",salG:"▲ +6,2%",setor:"Serviços",setorSub:"+780k postos"},
+  2023:{empT:"45,3M",empG:"▲ +4,9%",emp2T:"21,5M",emp2G:"▲ +8,6%",sal:"R$3.280",salG:"▲ +6,8%",setor:"Serviços",setorSub:"+850k postos"},
+  2024:{empT:"47,2M",empG:"▲ +4,2%",emp2T:"22,8M",emp2G:"▲ +6,0%",sal:"R$3.440",salG:"▲ +4,9%",setor:"Serviços",setorSub:"+900k postos"},
+  2025:{empT:"48,5M",empG:"▲ +2,71%",emp2T:"24,2M",emp2G:"▲ +6,1%",sal:"R$3.613",salG:"▲ +5,0%",setor:"Serviços",setorSub:"+758k postos"}
+};
+
+const SETORES=["Serviços","Comércio","Indústria","Construção","Agropecuária"];
+const SCOLS=["#38bdf8","#f47920","#a78bfa","#f87171","#34d399"];
+const SEG_P=[53.1,29.0,8.5,8.0,1.4];
+const REGS=["Sudeste","Nordeste","Sul","Centro-Oeste","Norte"];
+
+// ═══════════════════════════════════════════════════════════════════
+// SVG PATHS — SIMPLIFIED BRAZIL STATE BOUNDARIES
+// ═══════════════════════════════════════════════════════════════════
+const STATE_PATHS={
+AM:"M 48,100 L 115,65 150,60 175,75 188,65 200,75 200,100 185,125 185,165 175,185 148,198 120,202 78,195 48,178 35,155 35,125 Z",
+RR:"M 158,22 L 185,12 208,22 215,48 200,65 185,65 175,75 150,60 155,42 Z",
+AP:"M 258,16 L 282,12 295,28 298,58 285,78 265,78 255,58 248,32 Z",
+PA:"M 200,75 L 258,55 298,58 315,78 332,78 332,112 318,135 295,145 255,155 240,155 220,168 200,162 185,165 185,125 200,100 Z",
+MA:"M 318,100 L 348,82 372,90 385,108 385,135 368,155 345,162 318,155 318,135 332,112 Z",
+TO:"M 255,155 L 295,145 305,162 308,200 305,235 282,252 255,245 240,222 240,175 Z",
+PI:"M 345,112 L 368,100 388,112 398,138 395,165 378,185 355,182 345,162 348,135 Z",
+CE:"M 388,78 L 418,70 438,78 445,100 435,125 415,128 398,125 388,112 385,90 Z",
+RN:"M 438,78 L 465,72 475,88 468,108 448,112 435,100 438,85 Z",
+PB:"M 438,112 L 468,108 478,120 468,132 445,135 432,125 Z",
+PE:"M 405,132 L 445,135 475,135 485,148 468,158 432,158 405,155 395,145 Z",
+AL:"M 448,158 L 475,155 485,168 475,182 455,178 445,168 Z",
+SE:"M 438,178 L 458,178 465,192 455,202 438,198 435,188 Z",
+BA:"M 335,175 L 378,162 405,155 432,158 455,178 465,202 468,232 465,275 448,305 425,325 398,325 372,315 348,285 335,255 325,235 335,202 Z",
+MT:"M 155,202 L 222,185 255,200 262,232 268,275 248,302 215,312 175,305 145,282 135,248 138,222 Z",
+GO:"M 275,275 L 308,265 342,272 355,295 348,325 325,338 302,332 282,315 268,295 Z",
+DF:"M 315,288 L 328,285 335,295 328,305 315,305 308,296 Z",
+MS:"M 175,312 L 215,312 248,308 265,328 258,372 245,402 215,412 185,402 165,375 162,345 Z",
+MG:"M 325,245 L 355,235 385,242 415,258 435,285 438,315 425,342 398,348 372,345 348,348 332,342 315,325 305,305 305,275 Z",
+ES:"M 438,295 L 458,285 468,298 465,325 448,335 438,325 435,305 Z",
+RJ:"M 388,348 L 415,342 438,348 452,365 438,378 412,378 392,372 385,358 Z",
+SP:"M 302,348 L 348,348 385,358 398,378 392,405 368,418 338,422 312,412 288,395 282,375 285,358 Z",
+PR:"M 265,395 L 302,385 335,395 348,415 342,438 315,448 285,445 265,432 255,415 Z",
+SC:"M 285,445 L 315,448 338,448 348,465 335,478 308,482 285,475 275,462 Z",
+RS:"M 235,455 L 275,445 302,455 325,475 325,505 305,528 275,542 245,535 225,515 212,488 215,468 Z",
+RO:"M 88,198 L 130,185 155,202 148,232 145,265 125,275 95,268 78,245 75,218 Z",
+AC:"M 22,200 L 65,185 88,198 85,225 72,248 48,255 28,245 18,225 Z"
+};
+const STATE_LABELS={
+AM:[125,138],RR:[185,42],AP:[275,48],PA:[265,115],MA:[355,125],TO:[275,200],PI:[372,145],
+CE:[418,98],RN:[455,88],PB:[455,122],PE:[445,148],AL:[465,168],SE:[452,190],BA:[398,255],
+MT:[198,255],GO:[315,302],DF:[322,296],MS:[212,362],MG:[378,295],ES:[455,310],
+RJ:[418,365],SP:[342,385],PR:[305,422],SC:[312,465],RS:[275,495],RO:[115,235],AC:[55,225]
+};
+// ═══════════════════════════════════════════════════════════════════
+// MUNICIPAL DATA — ALL 27 STATES
+// ═══════════════════════════════════════════════════════════════════
+const MUNI_DATA={
+SP:{nome:"São Paulo",info:{emp:15731000,emp2:5240000,sal:4120},setores:[38,32,14,5,7,4],
+  trend:[{a:2019,emp:13.8,sal:3210},{a:2020,emp:12.4,sal:3090},{a:2021,emp:13.2,sal:3280},{a:2022,emp:14.1,sal:3510},{a:2023,emp:14.8,sal:3680},{a:2024,emp:15.4,sal:3850},{a:2025,emp:15.7,sal:4120}],
+  munis:[{n:"São Paulo",m:"RMSP",emp:6520000,emp2:1280000,sal:5120,set:"Serviços"},{n:"Campinas",m:"Campinas",emp:850000,emp2:158000,sal:3840,set:"Tecnologia"},{n:"Guarulhos",m:"RMSP",emp:610000,emp2:102000,sal:3380,set:"Indústria"},{n:"S. Bernardo",m:"ABC",emp:530000,emp2:88000,sal:3620,set:"Indústria"},{n:"Osasco",m:"RMSP",emp:420000,emp2:72000,sal:3350,set:"Comércio"},{n:"Rib. Preto",m:"Rib. Preto",emp:380000,emp2:68000,sal:3220,set:"Serviços"},{n:"Sorocaba",m:"Sorocaba",emp:360000,emp2:62000,sal:3180,set:"Indústria"},{n:"SJC",m:"V. Paraíba",emp:330000,emp2:58000,sal:4060,set:"Aeroespacial"},{n:"Santos",m:"B. Santista",emp:310000,emp2:55000,sal:3400,set:"Portuário"},{n:"Bauru",m:"Bauru",emp:210000,emp2:38000,sal:2880,set:"Comércio"}]},
+RJ:{nome:"Rio de Janeiro",info:{emp:6281000,emp2:2178000,sal:3850},setores:[22,42,12,3,8,13],
+  trend:[{a:2019,emp:5.8,sal:3180},{a:2020,emp:5.1,sal:3050},{a:2021,emp:5.4,sal:3120},{a:2022,emp:5.7,sal:3280},{a:2023,emp:5.9,sal:3450},{a:2024,emp:6.2,sal:3620},{a:2025,emp:6.3,sal:3850}],
+  munis:[{n:"Rio de Janeiro",m:"Capital",emp:3220000,emp2:560000,sal:4480,set:"Serviços"},{n:"Niterói",m:"Leste Flum.",emp:440000,emp2:75000,sal:4020,set:"Serviços"},{n:"Nova Iguaçu",m:"Baixada",emp:400000,emp2:65000,sal:2940,set:"Comércio"},{n:"Duque de Caxias",m:"Baixada",emp:380000,emp2:62000,sal:3060,set:"Petroquímica"},{n:"Petrópolis",m:"Serrana",emp:195000,emp2:34000,sal:3020,set:"Turismo"},{n:"Volta Redonda",m:"Sul Flum.",emp:185000,emp2:32000,sal:3140,set:"Siderurgia"},{n:"Campos",m:"Norte Flum.",emp:175000,emp2:30000,sal:2960,set:"Petróleo"},{n:"Macaé",m:"Baixadas",emp:155000,emp2:26000,sal:4320,set:"Petróleo"}]},
+MG:{nome:"Minas Gerais",info:{emp:7346000,emp2:2664000,sal:3120},setores:[28,34,18,8,7,5],
+  trend:[{a:2019,emp:6.4,sal:2480},{a:2020,emp:5.8,sal:2350},{a:2021,emp:6.2,sal:2550},{a:2022,emp:6.7,sal:2680},{a:2023,emp:7.0,sal:2810},{a:2024,emp:7.2,sal:2940},{a:2025,emp:7.3,sal:3120}],
+  munis:[{n:"Belo Horizonte",m:"RMBH",emp:2580000,emp2:440000,sal:3840,set:"Serviços"},{n:"Uberlândia",m:"Triângulo",emp:510000,emp2:90000,sal:3180,set:"Comércio"},{n:"Contagem",m:"RMBH",emp:440000,emp2:74000,sal:3320,set:"Indústria"},{n:"Juiz de Fora",m:"Zona Mata",emp:360000,emp2:62000,sal:2860,set:"Serviços"},{n:"Betim",m:"RMBH",emp:330000,emp2:54000,sal:3480,set:"Automotivo"},{n:"Montes Claros",m:"Norte MG",emp:240000,emp2:40000,sal:2620,set:"Saúde"},{n:"Uberaba",m:"Triângulo",emp:185000,emp2:31000,sal:2940,set:"Agronegócio"},{n:"Ipatinga",m:"Vale Aço",emp:172000,emp2:28000,sal:2880,set:"Siderurgia"}]},
+ES:{nome:"Espírito Santo",info:{emp:1612000,emp2:508000,sal:2980},setores:[30,32,15,10,8,5],
+  trend:[{a:2019,emp:1.3,sal:2380},{a:2020,emp:1.2,sal:2280},{a:2021,emp:1.3,sal:2450},{a:2022,emp:1.4,sal:2580},{a:2023,emp:1.5,sal:2720},{a:2024,emp:1.55,sal:2850},{a:2025,emp:1.6,sal:2980}],
+  munis:[{n:"Vitória",m:"RMGV",emp:420000,emp2:85000,sal:3680,set:"Serviços"},{n:"Serra",m:"RMGV",emp:310000,emp2:52000,sal:2840,set:"Indústria"},{n:"Vila Velha",m:"RMGV",emp:280000,emp2:48000,sal:2920,set:"Comércio"},{n:"Cariacica",m:"RMGV",emp:210000,emp2:35000,sal:2580,set:"Comércio"},{n:"Cachoeiro",m:"Sul",emp:120000,emp2:20000,sal:2420,set:"Mineração"},{n:"Linhares",m:"Norte",emp:95000,emp2:16000,sal:2380,set:"Agronegócio"},{n:"Colatina",m:"Noroeste",emp:72000,emp2:12000,sal:2280,set:"Confecção"}]},
+RS:{nome:"Rio Grande do Sul",info:{emp:4985000,emp2:1452000,sal:3040},setores:[32,30,20,9,6,3],
+  trend:[{a:2019,emp:4.4,sal:2420},{a:2020,emp:3.9,sal:2310},{a:2021,emp:4.1,sal:2480},{a:2022,emp:4.5,sal:2600},{a:2023,emp:4.7,sal:2730},{a:2024,emp:4.9,sal:2860},{a:2025,emp:5.0,sal:3040}],
+  munis:[{n:"Porto Alegre",m:"RMPA",emp:1520000,emp2:275000,sal:3680,set:"Serviços"},{n:"Caxias do Sul",m:"Serra",emp:510000,emp2:90000,sal:3320,set:"Metal-Mec."},{n:"Canoas",m:"RMPA",emp:340000,emp2:58000,sal:3080,set:"Indústria"},{n:"Pelotas",m:"Sul",emp:280000,emp2:48000,sal:2580,set:"Calçados"},{n:"Santa Maria",m:"Centro",emp:228000,emp2:38000,sal:2620,set:"Serviços"},{n:"Gravataí",m:"RMPA",emp:200000,emp2:34000,sal:2940,set:"Automotivo"},{n:"Novo Hamburgo",m:"V.Sinos",emp:185000,emp2:31000,sal:2860,set:"Calçados"},{n:"Passo Fundo",m:"Norte",emp:148000,emp2:25000,sal:2680,set:"Agronegócio"}]},
+SC:{nome:"Santa Catarina",info:{emp:3360000,emp2:1122000,sal:3100},setores:[30,28,22,10,6,4],
+  trend:[{a:2019,emp:2.9,sal:2480},{a:2020,emp:2.6,sal:2380},{a:2021,emp:2.8,sal:2550},{a:2022,emp:3.0,sal:2680},{a:2023,emp:3.2,sal:2820},{a:2024,emp:3.3,sal:2960},{a:2025,emp:3.4,sal:3100}],
+  munis:[{n:"Florianópolis",m:"Grande Fpolis",emp:520000,emp2:95000,sal:3680,set:"Tecnologia"},{n:"Joinville",m:"Norte",emp:480000,emp2:82000,sal:3420,set:"Indústria"},{n:"Blumenau",m:"Vale Itajaí",emp:320000,emp2:56000,sal:3280,set:"Têxtil"},{n:"Criciúma",m:"Sul",emp:220000,emp2:38000,sal:2780,set:"Cerâmica"},{n:"Chapecó",m:"Oeste",emp:190000,emp2:32000,sal:2680,set:"Agroindústria"},{n:"Itajaí",m:"Foz Itajaí",emp:175000,emp2:30000,sal:3120,set:"Portuário"},{n:"Jaraguá do Sul",m:"Norte",emp:140000,emp2:24000,sal:3080,set:"Indústria"}]},
+PR:{nome:"Paraná",info:{emp:4540000,emp2:1800000,sal:2920},setores:[30,32,18,10,6,4],
+  trend:[{a:2019,emp:3.9,sal:2320},{a:2020,emp:3.5,sal:2220},{a:2021,emp:3.7,sal:2380},{a:2022,emp:4.0,sal:2510},{a:2023,emp:4.2,sal:2630},{a:2024,emp:4.5,sal:2750},{a:2025,emp:4.5,sal:2920}],
+  munis:[{n:"Curitiba",m:"RMC",emp:1680000,emp2:298000,sal:3580,set:"Serviços"},{n:"Londrina",m:"Norte",emp:440000,emp2:76000,sal:2940,set:"Agronegócio"},{n:"Maringá",m:"Noroeste",emp:405000,emp2:68000,sal:3020,set:"Comércio"},{n:"Ponta Grossa",m:"Campos Gerais",emp:280000,emp2:48000,sal:2780,set:"Agroindústria"},{n:"Cascavel",m:"Oeste",emp:260000,emp2:45000,sal:2680,set:"Agronegócio"},{n:"SJ Pinhais",m:"RMC",emp:240000,emp2:40000,sal:3080,set:"Automotivo"},{n:"Foz do Iguaçu",m:"Oeste",emp:210000,emp2:36000,sal:2580,set:"Turismo"},{n:"Paranaguá",m:"Litoral",emp:148000,emp2:24000,sal:2940,set:"Portuário"}]},
+BA:{nome:"Bahia",info:{emp:3574000,emp2:968000,sal:2120},setores:[35,28,14,12,7,4],
+  trend:[{a:2019,emp:3.0,sal:1680},{a:2020,emp:2.6,sal:1580},{a:2021,emp:2.8,sal:1720},{a:2022,emp:3.1,sal:1820},{a:2023,emp:3.3,sal:1910},{a:2024,emp:3.5,sal:1980},{a:2025,emp:3.6,sal:2120}],
+  munis:[{n:"Salvador",m:"RMS",emp:1320000,emp2:205000,sal:2780,set:"Serviços"},{n:"Feira Santana",m:"Portal Sertão",emp:300000,emp2:52000,sal:2080,set:"Comércio"},{n:"V. Conquista",m:"Sudoeste",emp:178000,emp2:30000,sal:1920,set:"Comércio"},{n:"Camaçari",m:"RMS",emp:165000,emp2:28000,sal:2480,set:"Petroquímica"},{n:"Itabuna",m:"Sul Baiano",emp:148000,emp2:24000,sal:1880,set:"Serviços"},{n:"Juazeiro",m:"S. Francisco",emp:135000,emp2:22000,sal:1780,set:"Fruticultura"},{n:"Ilhéus",m:"Sul Baiano",emp:118000,emp2:19000,sal:1940,set:"Turismo"},{n:"Barreiras",m:"Oeste",emp:98000,emp2:15000,sal:1980,set:"Agronegócio"}]},
+CE:{nome:"Ceará",info:{emp:2418000,emp2:620000,sal:1950},setores:[38,30,12,8,8,4],
+  trend:[{a:2019,emp:2.0,sal:1520},{a:2020,emp:1.7,sal:1420},{a:2021,emp:1.9,sal:1560},{a:2022,emp:2.1,sal:1640},{a:2023,emp:2.2,sal:1730},{a:2024,emp:2.3,sal:1820},{a:2025,emp:2.4,sal:1950}],
+  munis:[{n:"Fortaleza",m:"RMF",emp:960000,emp2:165000,sal:2480,set:"Serviços"},{n:"Caucaia",m:"RMF",emp:228000,emp2:38000,sal:1880,set:"Indústria"},{n:"Juaz. Norte",m:"Cariri",emp:208000,emp2:34000,sal:1780,set:"Comércio"},{n:"Maracanaú",m:"RMF",emp:178000,emp2:30000,sal:2020,set:"Indústria"},{n:"Sobral",m:"Noroeste",emp:155000,emp2:26000,sal:1840,set:"Calçados"},{n:"Crato",m:"Cariri",emp:128000,emp2:21000,sal:1720,set:"Serviços"},{n:"Iguatu",m:"Centro-Sul",emp:78000,emp2:12000,sal:1640,set:"Comércio"}]},
+PE:{nome:"Pernambuco",info:{emp:2248000,emp2:584000,sal:2050},setores:[36,30,14,8,8,4],
+  trend:[{a:2019,emp:1.9,sal:1620},{a:2020,emp:1.7,sal:1520},{a:2021,emp:1.8,sal:1650},{a:2022,emp:2.0,sal:1760},{a:2023,emp:2.1,sal:1850},{a:2024,emp:2.2,sal:1940},{a:2025,emp:2.2,sal:2050}],
+  munis:[{n:"Recife",m:"RMR",emp:880000,emp2:148000,sal:2680,set:"Serviços"},{n:"Jaboatão",m:"RMR",emp:280000,emp2:45000,sal:2020,set:"Indústria"},{n:"Olinda",m:"RMR",emp:185000,emp2:30000,sal:1920,set:"Comércio"},{n:"Caruaru",m:"Agreste",emp:195000,emp2:34000,sal:1840,set:"Confecção"},{n:"Petrolina",m:"S. Francisco",emp:175000,emp2:28000,sal:1920,set:"Fruticultura"},{n:"Paulista",m:"RMR",emp:150000,emp2:24000,sal:1980,set:"Indústria"},{n:"Cabo de S. Agostinho",m:"RMR",emp:125000,emp2:20000,sal:2180,set:"Portuário"}]},
+MA:{nome:"Maranhão",info:{emp:1338000,emp2:418000,sal:1680},setores:[40,28,10,8,10,4],
+  trend:[{a:2019,emp:1.1,sal:1320},{a:2020,emp:0.95,sal:1240},{a:2021,emp:1.0,sal:1350},{a:2022,emp:1.1,sal:1420},{a:2023,emp:1.2,sal:1520},{a:2024,emp:1.3,sal:1580},{a:2025,emp:1.34,sal:1680}],
+  munis:[{n:"São Luís",m:"RMI",emp:580000,emp2:98000,sal:2180,set:"Serviços"},{n:"Imperatriz",m:"Sul",emp:165000,emp2:28000,sal:1780,set:"Comércio"},{n:"Timon",m:"Leste",emp:95000,emp2:16000,sal:1520,set:"Comércio"},{n:"Caxias",m:"Leste",emp:85000,emp2:14000,sal:1480,set:"Serviços"},{n:"Codó",m:"Central",emp:62000,emp2:10000,sal:1380,set:"Agronegócio"},{n:"Açailândia",m:"Oeste",emp:58000,emp2:9500,sal:1620,set:"Siderurgia"},{n:"Bacabal",m:"Mearim",emp:52000,emp2:8500,sal:1420,set:"Comércio"}]},
+PB:{nome:"Paraíba",info:{emp:982000,emp2:280000,sal:1840},setores:[38,30,12,8,8,4],
+  trend:[{a:2019,emp:0.8,sal:1440},{a:2020,emp:0.7,sal:1360},{a:2021,emp:0.75,sal:1480},{a:2022,emp:0.82,sal:1560},{a:2023,emp:0.88,sal:1650},{a:2024,emp:0.94,sal:1740},{a:2025,emp:0.98,sal:1840}],
+  munis:[{n:"João Pessoa",m:"RMJ",emp:420000,emp2:72000,sal:2320,set:"Serviços"},{n:"Campina Grande",m:"Borborema",emp:195000,emp2:34000,sal:1920,set:"Tecnologia"},{n:"Santa Rita",m:"RMJ",emp:88000,emp2:15000,sal:1680,set:"Indústria"},{n:"Patos",m:"Sertão",emp:72000,emp2:12000,sal:1620,set:"Comércio"},{n:"Bayeux",m:"RMJ",emp:62000,emp2:10000,sal:1580,set:"Comércio"},{n:"Cabedelo",m:"RMJ",emp:55000,emp2:9000,sal:2080,set:"Portuário"}]},
+RN:{nome:"Rio Grande do Norte",info:{emp:878000,emp2:248000,sal:1900},setores:[36,30,12,8,10,4],
+  trend:[{a:2019,emp:0.72,sal:1480},{a:2020,emp:0.64,sal:1390},{a:2021,emp:0.68,sal:1510},{a:2022,emp:0.74,sal:1600},{a:2023,emp:0.79,sal:1700},{a:2024,emp:0.84,sal:1800},{a:2025,emp:0.88,sal:1900}],
+  munis:[{n:"Natal",m:"RMN",emp:380000,emp2:65000,sal:2420,set:"Serviços"},{n:"Mossoró",m:"Oeste",emp:145000,emp2:24000,sal:1980,set:"Petróleo"},{n:"Parnamirim",m:"RMN",emp:120000,emp2:20000,sal:2080,set:"Comércio"},{n:"São Gonçalo",m:"RMN",emp:55000,emp2:9000,sal:1620,set:"Comércio"},{n:"Macaíba",m:"RMN",emp:42000,emp2:7000,sal:1580,set:"Indústria"},{n:"Caicó",m:"Seridó",emp:38000,emp2:6000,sal:1520,set:"Comércio"}]},
+AL:{nome:"Alagoas",info:{emp:650000,emp2:178000,sal:1800},setores:[38,28,12,10,8,4],
+  trend:[{a:2019,emp:0.52,sal:1400},{a:2020,emp:0.46,sal:1320},{a:2021,emp:0.50,sal:1440},{a:2022,emp:0.55,sal:1520},{a:2023,emp:0.59,sal:1620},{a:2024,emp:0.62,sal:1710},{a:2025,emp:0.65,sal:1800}],
+  munis:[{n:"Maceió",m:"RMM",emp:320000,emp2:55000,sal:2280,set:"Serviços"},{n:"Arapiraca",m:"Agreste",emp:105000,emp2:18000,sal:1680,set:"Comércio"},{n:"Rio Largo",m:"RMM",emp:48000,emp2:8000,sal:1520,set:"Indústria"},{n:"Palmeira Índios",m:"Agreste",emp:35000,emp2:6000,sal:1480,set:"Comércio"},{n:"Marechal Deodoro",m:"RMM",emp:32000,emp2:5500,sal:1580,set:"Turismo"},{n:"Penedo",m:"Sul",emp:28000,emp2:4500,sal:1420,set:"Comércio"}]},
+SE:{nome:"Sergipe",info:{emp:568000,emp2:148000,sal:1860},setores:[38,30,12,8,8,4],
+  trend:[{a:2019,emp:0.46,sal:1450},{a:2020,emp:0.41,sal:1370},{a:2021,emp:0.44,sal:1480},{a:2022,emp:0.48,sal:1560},{a:2023,emp:0.52,sal:1660},{a:2024,emp:0.55,sal:1760},{a:2025,emp:0.57,sal:1860}],
+  munis:[{n:"Aracaju",m:"RMA",emp:285000,emp2:48000,sal:2340,set:"Serviços"},{n:"N.Sra. Socorro",m:"RMA",emp:82000,emp2:14000,sal:1680,set:"Comércio"},{n:"Lagarto",m:"Centro-Sul",emp:48000,emp2:8000,sal:1520,set:"Comércio"},{n:"Itabaiana",m:"Agreste",emp:42000,emp2:7000,sal:1580,set:"Comércio"},{n:"Estância",m:"Sul",emp:32000,emp2:5500,sal:1480,set:"Indústria"}]},
+PI:{nome:"Piauí",info:{emp:722000,emp2:208000,sal:1740},setores:[40,28,10,8,10,4],
+  trend:[{a:2019,emp:0.58,sal:1360},{a:2020,emp:0.52,sal:1280},{a:2021,emp:0.56,sal:1390},{a:2022,emp:0.60,sal:1470},{a:2023,emp:0.64,sal:1560},{a:2024,emp:0.68,sal:1650},{a:2025,emp:0.72,sal:1740}],
+  munis:[{n:"Teresina",m:"RMT",emp:380000,emp2:65000,sal:2180,set:"Serviços"},{n:"Parnaíba",m:"Norte",emp:78000,emp2:13000,sal:1620,set:"Turismo"},{n:"Picos",m:"Centro",emp:55000,emp2:9000,sal:1520,set:"Comércio"},{n:"Piripiri",m:"Norte",emp:38000,emp2:6000,sal:1420,set:"Comércio"},{n:"Floriano",m:"Sul",emp:35000,emp2:5800,sal:1480,set:"Serviços"}]},
+AM:{nome:"Amazonas",info:{emp:1528000,emp2:298000,sal:2320},setores:[28,30,22,4,8,8],
+  trend:[{a:2019,emp:1.3,sal:1820},{a:2020,emp:1.1,sal:1720},{a:2021,emp:1.2,sal:1880},{a:2022,emp:1.3,sal:1980},{a:2023,emp:1.4,sal:2080},{a:2024,emp:1.48,sal:2200},{a:2025,emp:1.53,sal:2320}],
+  munis:[{n:"Manaus",m:"RMM",emp:1280000,emp2:218000,sal:2580,set:"Indústria"},{n:"Parintins",m:"B. Amazonas",emp:42000,emp2:7000,sal:1680,set:"Comércio"},{n:"Itacoatiara",m:"B. Amazonas",emp:38000,emp2:6200,sal:1720,set:"Madeireiro"},{n:"Manacapuru",m:"RMM",emp:32000,emp2:5200,sal:1580,set:"Comércio"},{n:"Coari",m:"Solimões",emp:28000,emp2:4500,sal:1780,set:"Petróleo"},{n:"Tabatinga",m:"Alto Solimões",emp:22000,emp2:3500,sal:1620,set:"Comércio"}]},
+PA:{nome:"Pará",info:{emp:2092000,emp2:508000,sal:2050},setores:[32,28,14,8,12,6],
+  trend:[{a:2019,emp:1.7,sal:1620},{a:2020,emp:1.5,sal:1520},{a:2021,emp:1.6,sal:1660},{a:2022,emp:1.8,sal:1750},{a:2023,emp:1.9,sal:1850},{a:2024,emp:2.0,sal:1950},{a:2025,emp:2.1,sal:2050}],
+  munis:[{n:"Belém",m:"RMB",emp:820000,emp2:140000,sal:2580,set:"Serviços"},{n:"Ananindeua",m:"RMB",emp:240000,emp2:40000,sal:2080,set:"Comércio"},{n:"Santarém",m:"B. Tapajós",emp:155000,emp2:26000,sal:1820,set:"Agronegócio"},{n:"Marabá",m:"Carajás",emp:148000,emp2:24000,sal:2120,set:"Mineração"},{n:"Castanhal",m:"RMB",emp:95000,emp2:16000,sal:1720,set:"Comércio"},{n:"Parauapebas",m:"Carajás",emp:112000,emp2:18000,sal:2680,set:"Mineração"},{n:"Marituba",m:"RMB",emp:68000,emp2:11000,sal:1680,set:"Comércio"}]},
+RR:{nome:"Roraima",info:{emp:210000,emp2:42000,sal:2180},setores:[42,28,8,8,10,4],
+  trend:[{a:2019,emp:0.17,sal:1720},{a:2020,emp:0.15,sal:1620},{a:2021,emp:0.16,sal:1740},{a:2022,emp:0.18,sal:1840},{a:2023,emp:0.19,sal:1950},{a:2024,emp:0.20,sal:2060},{a:2025,emp:0.21,sal:2180}],
+  munis:[{n:"Boa Vista",m:"Capital",emp:168000,emp2:28000,sal:2380,set:"Serviços"},{n:"Rorainópolis",m:"Sul",emp:15000,emp2:2500,sal:1720,set:"Agronegócio"},{n:"Caracaraí",m:"Sul",emp:12000,emp2:2000,sal:1680,set:"Comércio"},{n:"Pacaraima",m:"Norte",emp:8000,emp2:1300,sal:1620,set:"Comércio"}]},
+AP:{nome:"Amapá",info:{emp:192000,emp2:36000,sal:2150},setores:[44,26,8,8,10,4],
+  trend:[{a:2019,emp:0.16,sal:1680},{a:2020,emp:0.14,sal:1580},{a:2021,emp:0.15,sal:1700},{a:2022,emp:0.16,sal:1800},{a:2023,emp:0.17,sal:1920},{a:2024,emp:0.18,sal:2040},{a:2025,emp:0.19,sal:2150}],
+  munis:[{n:"Macapá",m:"Capital",emp:148000,emp2:25000,sal:2350,set:"Serviços"},{n:"Santana",m:"RMM",emp:22000,emp2:3800,sal:1880,set:"Portuário"},{n:"Laranjal Jari",m:"Sul",emp:10000,emp2:1600,sal:1620,set:"Mineração"},{n:"Oiapoque",m:"Norte",emp:6000,emp2:1000,sal:1580,set:"Comércio"}]},
+AC:{nome:"Acre",info:{emp:224000,emp2:48000,sal:2100},setores:[42,28,8,6,12,4],
+  trend:[{a:2019,emp:0.18,sal:1640},{a:2020,emp:0.16,sal:1550},{a:2021,emp:0.17,sal:1680},{a:2022,emp:0.19,sal:1780},{a:2023,emp:0.20,sal:1880},{a:2024,emp:0.21,sal:1990},{a:2025,emp:0.22,sal:2100}],
+  munis:[{n:"Rio Branco",m:"Capital",emp:172000,emp2:29000,sal:2320,set:"Serviços"},{n:"Cruzeiro do Sul",m:"Juruá",emp:22000,emp2:3600,sal:1780,set:"Comércio"},{n:"Sena Madureira",m:"Purus",emp:10000,emp2:1600,sal:1580,set:"Agronegócio"},{n:"Tarauacá",m:"Juruá",emp:7000,emp2:1100,sal:1520,set:"Comércio"}]},
+RO:{nome:"Rondônia",info:{emp:418000,emp2:112000,sal:2260},setores:[30,28,12,10,16,4],
+  trend:[{a:2019,emp:0.34,sal:1780},{a:2020,emp:0.31,sal:1680},{a:2021,emp:0.33,sal:1820},{a:2022,emp:0.36,sal:1920},{a:2023,emp:0.38,sal:2040},{a:2024,emp:0.40,sal:2150},{a:2025,emp:0.42,sal:2260}],
+  munis:[{n:"Porto Velho",m:"Capital",emp:235000,emp2:40000,sal:2520,set:"Serviços"},{n:"Ji-Paraná",m:"Central",emp:58000,emp2:10000,sal:2080,set:"Comércio"},{n:"Vilhena",m:"Cone Sul",emp:38000,emp2:6500,sal:2120,set:"Agronegócio"},{n:"Cacoal",m:"Central",emp:32000,emp2:5500,sal:1920,set:"Comércio"},{n:"Ariquemes",m:"V. Jamari",emp:28000,emp2:4800,sal:1880,set:"Agronegócio"}]},
+TO:{nome:"Tocantins",info:{emp:458000,emp2:108000,sal:2100},setores:[38,28,10,8,12,4],
+  trend:[{a:2019,emp:0.37,sal:1640},{a:2020,emp:0.33,sal:1550},{a:2021,emp:0.36,sal:1680},{a:2022,emp:0.39,sal:1780},{a:2023,emp:0.41,sal:1880},{a:2024,emp:0.44,sal:1990},{a:2025,emp:0.46,sal:2100}],
+  munis:[{n:"Palmas",m:"Capital",emp:228000,emp2:38000,sal:2580,set:"Serviços"},{n:"Araguaína",m:"Norte",emp:72000,emp2:12000,sal:1920,set:"Comércio"},{n:"Gurupi",m:"Sul",emp:42000,emp2:7000,sal:1820,set:"Agronegócio"},{n:"Porto Nacional",m:"Central",emp:28000,emp2:4600,sal:1780,set:"Comércio"},{n:"Paraíso",m:"Central",emp:22000,emp2:3600,sal:1720,set:"Comércio"}]},
+MT:{nome:"Mato Grosso",info:{emp:1128000,emp2:358000,sal:2580},setores:[25,26,12,8,25,4],
+  trend:[{a:2019,emp:0.92,sal:2020},{a:2020,emp:0.84,sal:1920},{a:2021,emp:0.90,sal:2080},{a:2022,emp:0.98,sal:2200},{a:2023,emp:1.04,sal:2320},{a:2024,emp:1.10,sal:2450},{a:2025,emp:1.13,sal:2580}],
+  munis:[{n:"Cuiabá",m:"RMC",emp:380000,emp2:65000,sal:3080,set:"Serviços"},{n:"Várzea Grande",m:"RMC",emp:148000,emp2:25000,sal:2420,set:"Comércio"},{n:"Rondonópolis",m:"Sul",emp:135000,emp2:22000,sal:2580,set:"Agronegócio"},{n:"Sinop",m:"Norte",emp:108000,emp2:18000,sal:2620,set:"Agronegócio"},{n:"Sorriso",m:"Norte",emp:65000,emp2:11000,sal:2780,set:"Agronegócio"},{n:"Lucas R. Verde",m:"Norte",emp:52000,emp2:8500,sal:2880,set:"Agronegócio"},{n:"Tangará Serra",m:"Médio Norte",emp:48000,emp2:8000,sal:2320,set:"Comércio"}]},
+MS:{nome:"Mato Grosso do Sul",info:{emp:962000,emp2:268000,sal:2440},setores:[28,28,14,8,18,4],
+  trend:[{a:2019,emp:0.78,sal:1920},{a:2020,emp:0.71,sal:1820},{a:2021,emp:0.76,sal:1960},{a:2022,emp:0.83,sal:2080},{a:2023,emp:0.88,sal:2200},{a:2024,emp:0.93,sal:2320},{a:2025,emp:0.96,sal:2440}],
+  munis:[{n:"Campo Grande",m:"Capital",emp:420000,emp2:72000,sal:2880,set:"Serviços"},{n:"Dourados",m:"G. Dourados",emp:128000,emp2:22000,sal:2320,set:"Agronegócio"},{n:"Três Lagoas",m:"Bolsão",emp:65000,emp2:11000,sal:2580,set:"Indústria"},{n:"Corumbá",m:"Pantanal",emp:48000,emp2:8000,sal:2180,set:"Mineração"},{n:"Ponta Porã",m:"Fronteira",emp:42000,emp2:7000,sal:2020,set:"Comércio"},{n:"Naviraí",m:"Cone Sul",emp:32000,emp2:5500,sal:2080,set:"Agronegócio"}]},
+GO:{nome:"Goiás",info:{emp:1892000,emp2:508000,sal:2520},setores:[30,34,12,16,5,3],
+  trend:[{a:2019,emp:1.5,sal:1980},{a:2020,emp:1.4,sal:1880},{a:2021,emp:1.5,sal:2020},{a:2022,emp:1.6,sal:2140},{a:2023,emp:1.7,sal:2250},{a:2024,emp:1.8,sal:2360},{a:2025,emp:1.9,sal:2520}],
+  munis:[{n:"Goiânia",m:"RMG",emp:810000,emp2:135000,sal:3080,set:"Serviços"},{n:"Aparecida",m:"RMG",emp:280000,emp2:45000,sal:2580,set:"Comércio"},{n:"Anápolis",m:"Anápolis",emp:232000,emp2:38000,sal:2780,set:"Fármaco"},{n:"Rio Verde",m:"Sudoeste",emp:158000,emp2:26000,sal:2520,set:"Agronegócio"},{n:"Luziânia",m:"Entorno DF",emp:138000,emp2:23000,sal:2380,set:"Comércio"},{n:"Caldas Novas",m:"Sul",emp:95000,emp2:15000,sal:2180,set:"Turismo"}]},
+DF:{nome:"Distrito Federal",info:{emp:1418000,emp2:298000,sal:4580},setores:[15,52,6,2,8,17],
+  trend:[{a:2019,emp:1.2,sal:3680},{a:2020,emp:1.1,sal:3520},{a:2021,emp:1.2,sal:3680},{a:2022,emp:1.3,sal:3880},{a:2023,emp:1.35,sal:4080},{a:2024,emp:1.38,sal:4280},{a:2025,emp:1.42,sal:4580}],
+  munis:[{n:"Plano Piloto",m:"Central",emp:440000,emp2:75000,sal:6480,set:"Gov. Federal"},{n:"Taguatinga",m:"Oeste",emp:195000,emp2:34000,sal:3880,set:"Comércio"},{n:"Ceilândia",m:"Noroeste",emp:175000,emp2:30000,sal:3220,set:"Comércio"},{n:"Samambaia",m:"Oeste",emp:152000,emp2:26000,sal:3080,set:"Serviços"},{n:"Gama",m:"Sul",emp:138000,emp2:24000,sal:3340,set:"Comércio"},{n:"Sobradinho",m:"Norte",emp:125000,emp2:20000,sal:3780,set:"Serviços"},{n:"Guará",m:"Central-Sul",emp:115000,emp2:19000,sal:4220,set:"Serviços"}]}
+};
+const SETOR_COLS={'Serviços':'#38bdf8','Comércio':'#f47920','Indústria':'#a78bfa','Agronegócio':'#34d399','Tecnologia':'#fbbf24','Metal-Mec.':'#f87171','Automotivo':'#e879f9','Petróleo':'#6ee7b7','Portuário':'#67e8f9','Turismo':'#fdba74','Calçados':'#fca5a5','Siderurgia':'#94a3b8','Petroquímica':'#c4b5fd','Gov. Federal':'#bfdbfe','Fármaco':'#a5f3fc','Agroindústria':'#bbf7d0','Mineração':'#e5e7eb','Aeroespacial':'#c7d2fe','Indústria':'#a78bfa','Fruticultura':'#fed7aa','Saúde':'#f0abfc','Confecção':'#fbcfe8','Madeireiro':'#d9f99d','Cerâmica':'#fde68a','Têxtil':'#c4b5fd'};
+// ═══════════════════════════════════════════════════════════════════
+// CHART UTILITIES — LECARD THEME
+// ═══════════════════════════════════════════════════════════════════
+const TT={backgroundColor:"#fff",borderColor:"#E8E8E0",borderWidth:1,titleColor:"#2D2D2D",bodyColor:"#6B6B6B",padding:10,titleFont:{family:"Montserrat",size:11,weight:"bold"},bodyFont:{family:"Inter",size:10}};
+const GX={ticks:{color:"#9E9E9E",font:{family:"Inter",size:9}},grid:{color:"rgba(232,232,224,0.7)"}};
+const CFG={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#6B6B6B",font:{family:"Inter",size:10},boxWidth:12}}},scales:{x:GX,y:{...GX}}};
+const CH={};
+function mk(id,cfg){if(CH[id])CH[id].destroy();CH[id]=new Chart(document.getElementById(id),cfg)}
+
+const LABELS={dashboard:"Dashboard",mapa:"Mapa de Calor",indicadores:"Indicadores",cruzada:"Análise Cruzada",regioes:"Regiões por Estado",docs:"Documentação"};
+let curPage='dashboard';
+
+function goPage(id,btn){
+  curPage=id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('bc').textContent=LABELS[id];
+  rebuildCurrentPage();
+}
+
+function setAno(a,btn){
+  curAno=a;
+  document.querySelectorAll('.yr-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('bcYear').textContent='Ano: '+a;
+  ST=getSTForYear(a);recalcMax();
+  rebuildAll();
+}
+
+function rebuildAll(){
+  buildDash();
+  if(curPage==='mapa')buildMap();
+  if(curPage==='indicadores')buildInd();
+  if(curPage==='cruzada')buildCruz();
+  if(curPage==='regioes'&&selState)renderRegState();
+}
+function rebuildCurrentPage(){
+  if(curPage==='dashboard')buildDash();
+  if(curPage==='mapa')buildMap();
+  if(curPage==='indicadores')buildInd();
+  if(curPage==='cruzada')buildCruz();
+  if(curPage==='regioes')buildRegioesPage();
+}
+
+document.getElementById('fdt').textContent=new Date().toLocaleDateString('pt-BR');
+
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════
+function buildDash(){
+  const k=KPI_BY_YR[curAno];
+  const isUp=s=>s.startsWith('▲');
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi" style="--kpi-color:var(--yellow-dark)"><div class="kpi-icon">👷</div><div class="kpi-label">Empregos Formais CLT</div><div class="kpi-val">${k.empT}</div><div class="kpi-sub"><span class="kpi-badge ${isUp(k.empG)?'up':'dn'}">${k.empG}</span> CAGED ${curAno}</div></div>
+    <div class="kpi" style="--kpi-color:var(--cyan)"><div class="kpi-icon">🏢</div><div class="kpi-label">Empresas Ativas</div><div class="kpi-val">${k.emp2T}</div><div class="kpi-sub"><span class="kpi-badge ${isUp(k.emp2G)?'up':'dn'}">${k.emp2G}</span> Mapa Empresas</div></div>
+    <div class="kpi" style="--kpi-color:var(--charcoal)"><div class="kpi-icon">💰</div><div class="kpi-label">Renda Média</div><div class="kpi-val">${k.sal}</div><div class="kpi-sub"><span class="kpi-badge ${isUp(k.salG)?'up':'dn'}">${k.salG}</span> PNAD</div></div>
+    <div class="kpi" style="--kpi-color:var(--purple)"><div class="kpi-icon">🏆</div><div class="kpi-label">Setor Líder</div><div class="kpi-val" style="font-size:20px">${k.setor}</div><div class="kpi-sub">${k.setorSub}</div></div>`;
+
+  const trendSlice=TREND_DATA.filter(t=>t.ano<=curAno);
+  mk('cTrend',{type:'line',data:{labels:trendSlice.map(t=>t.ano),datasets:[
+    {label:'Empregos CLT (M)',data:trendSlice.map(t=>t.emp),borderColor:'#FFBA00',backgroundColor:'rgba(255,186,0,.08)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:'#FFBA00',pointBorderColor:'#fff',pointBorderWidth:2},
+    {label:'Renda Média (R$)',data:trendSlice.map(t=>t.renda),borderColor:'#2D2D2D',backgroundColor:'rgba(45,45,45,.04)',fill:true,tension:.4,yAxisID:'y1',pointRadius:5,pointBackgroundColor:'#2D2D2D',pointBorderColor:'#fff',pointBorderWidth:2}
+  ]},options:{...CFG,plugins:{...CFG.plugins,tooltip:{...TT}},scales:{x:GX,y:{...GX,position:'left'},y1:{ticks:{color:"#9E9E9E",font:{family:"Inter",size:9}},grid:{color:"transparent"},position:'right'}}}});
+
+  const saldo=SALDO_BY_YR[curAno]||SALDO_BY_YR[2025];
+  const SCOLS_LC=["#FFBA00","#2D2D2D","#0ea5e9","#22c55e","#8b5cf6"];
+  document.getElementById('pieTitle').textContent=`Geração de Empregos por Setor — ${curAno}`;
+  mk('cPie',{type:'doughnut',data:{labels:SETORES,datasets:[{data:saldo.map(Math.abs),backgroundColor:SCOLS_LC,borderColor:'#fff',borderWidth:3,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{color:'#6B6B6B',font:{family:'Inter',size:10},boxWidth:10,padding:10}},tooltip:{...TT,callbacks:{label:c=>{const v=saldo[c.dataIndex];return` ${c.label}: ${v>0?'+':''}${v.toFixed(1)}k`}}}}}});
+
+  const rs=RSALDO_BY_YR[curAno]||RSALDO_BY_YR[2025];
+  document.getElementById('regBarTitle').textContent=`Saldo de Empregos por Região — ${curAno}`;
+  mk('cRegiao',{type:'bar',data:{labels:REGS,datasets:[{label:'Saldo (mil)',data:rs.map(Math.abs),backgroundColor:['rgba(255,186,0,.8)','rgba(139,92,246,.7)','rgba(14,165,233,.7)','rgba(45,45,45,.65)','rgba(34,197,94,.7)'],borderRadius:6,borderSkipped:false}]},options:{...CFG,plugins:{...CFG.plugins,tooltip:{...TT}},scales:{x:GX,y:{...GX}}}});
+
+  const totalEmp=ST.reduce((s,x)=>s+x.emp,0);
+  const sudeste=ST.filter(s=>s.r==='Sudeste').reduce((s,x)=>s+x.emp,0);
+  document.getElementById('dashInsights').innerHTML=`
+    <div class="insight">🔍 <span>Em ${curAno}, o <b style="color:var(--charcoal)">Sudeste</b> concentra ${((sudeste/totalEmp)*100).toFixed(1)}% dos empregos formais. SP lidera com ${(ST.find(s=>s.uf==='SP').emp/1e6).toFixed(2)}M.</span></div>
+    <div class="insight">💡 <span>Renda média: <b style="color:var(--charcoal)">${KPI_BY_YR[curAno].sal}</b>. ${curAno===2020?'Pandemia impactou fortemente o mercado.':'Tendência de crescimento sustentado.'}</span></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CHOROPLETH MAP — LECARD YELLOW THEME
+// ═══════════════════════════════════════════════════════════════════
+let mapInd=0;
+function heatColor(val,max,type){
+  const r=Math.max(0.03,Math.min(1,val/max));
+  if(type===0)return`hsl(45,${50+r*48}%,${88-r*48}%)`;  // light cream → deep gold
+  if(type===1)return`hsl(199,${40+r*55}%,${88-r*50}%)`;  // light blue → deep cyan
+  return`hsl(0,0%,${90-r*58}%)`;  // light gray → charcoal
+}
+function buildMap(){
+  const svg=document.getElementById('bMap');svg.innerHTML='';const ns='http://www.w3.org/2000/svg';
+  document.getElementById('mapTitle').textContent=`Mapa de Calor — Brasil ${curAno}`;
+  const defs=document.createElementNS(ns,'defs');
+  defs.innerHTML='<filter id="glow"><feGaussianBlur in="SourceGraphic" stdDeviation="3"/></filter>';
+  svg.appendChild(defs);
+  const bg=document.createElementNS(ns,'rect');bg.setAttribute('width','600');bg.setAttribute('height','580');bg.setAttribute('fill','#F8F8F5');bg.setAttribute('rx','14');svg.appendChild(bg);
+  const maxV=[MEmp,MEmp2,MSal][mapInd];
+  ST.forEach(st=>{
+    const path=STATE_PATHS[st.uf];if(!path)return;
+    const val=[st.emp,st.emp2,st.sal][mapInd];
+    const col=heatColor(val,maxV,mapInd);
+    const g=document.createElementNS(ns,'g');g.style.cursor='pointer';
+    const p=document.createElementNS(ns,'path');
+    p.setAttribute('d',path);p.setAttribute('fill',col);p.setAttribute('class','state-path');
+    g.appendChild(p);
+    const lbl=STATE_LABELS[st.uf];
+    if(lbl){
+      const t=document.createElementNS(ns,'text');
+      t.setAttribute('x',lbl[0]);t.setAttribute('y',lbl[1]);
+      t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','middle');
+      t.setAttribute('class','state-label');
+      const area=getArea(path);
+      t.setAttribute('font-size',area>8000?'11':area>3000?'9':'7');
+      t.textContent=st.uf;g.appendChild(t);
+    }
+    g.addEventListener('mouseenter',()=>{
+      p.style.filter='brightness(1.1) drop-shadow(0 0 8px '+col+')';p.setAttribute('stroke','#2D2D2D');p.setAttribute('stroke-width','2.5');
+      document.getElementById('tt-n').textContent=st.nome;
+      document.getElementById('tt-r').textContent='Região '+st.r;
+      document.getElementById('tt-e').textContent=(st.emp/1e6).toFixed(2)+'M';
+      document.getElementById('tt-p').textContent=(st.emp2/1e6).toFixed(2)+'M';
+      document.getElementById('tt-s').textContent='R$ '+st.sal.toLocaleString('pt-BR');
+      document.getElementById('tt-saldo').textContent=(st.saldo>0?'+':'')+st.saldo.toLocaleString('pt-BR');
+      document.getElementById('mtt').classList.add('show');
+      const tot=ST.reduce((s,x)=>s+x.emp,0);
+      const avgSal=TREND_DATA.find(t=>t.ano===curAno)?.renda||3000;
+      document.getElementById('mapHint').innerHTML=`📍 <b style="color:var(--charcoal)">${st.nome}</b>: <b>${((st.emp/tot)*100).toFixed(1)}%</b> dos empregos formais (${curAno}). Renda ${st.sal>avgSal?'<span style="color:var(--green)">acima':'<span style="color:var(--red)">abaixo'}</span> da média nacional.`;
+    });
+    g.addEventListener('mouseleave',()=>{
+      p.style.filter='';p.setAttribute('stroke','#fff');p.setAttribute('stroke-width','1.8');
+      document.getElementById('mtt').classList.remove('show');
+    });
+    svg.appendChild(g);
+  });
+  buildHeatLegend(maxV,mapInd);buildTop5();
+}
+function getArea(d){const n=d.match(/[\d.]+/g).map(Number);let x0=999,x1=0,y0=999,y1=0;for(let i=0;i<n.length;i+=2){if(n[i]<x0)x0=n[i];if(n[i]>x1)x1=n[i];if(n[i+1]<y0)y0=n[i+1];if(n[i+1]>y1)y1=n[i+1];}return(x1-x0)*(y1-y0)}
+function buildHeatLegend(maxV,type){
+  const c=document.getElementById('heatLegend');const steps=14;
+  let h='<div class="heat-bar-row">';
+  for(let i=0;i<steps;i++)h+=`<div class="heat-bar-seg" style="background:${heatColor((i/(steps-1))*maxV,maxV,type)}"></div>`;
+  h+='</div>';
+  const f=v=>type===2?'R$ '+Math.round(v).toLocaleString('pt-BR'):(v/1e6).toFixed(1)+'M';
+  h+=`<div class="heat-bar-labels"><span>${f(0)}</span><span>${f(maxV*.33)}</span><span>${f(maxV*.66)}</span><span>${f(maxV)}</span></div>`;
+  c.innerHTML=h;
+}
+function setMapInd(i){mapInd=i;[0,1,2].forEach(j=>{document.getElementById('mb'+j).className='mind-btn'+(j===i?' a'+i:'')});buildMap()}
+function buildTop5(){
+  const key=['emp','emp2','sal'][mapInd],maxV=[MEmp,MEmp2,MSal][mapInd],col=['var(--yellow-dark)','var(--cyan)','var(--charcoal)'][mapInd];
+  const fmt=st=>mapInd===2?'R$ '+st.sal.toLocaleString('pt-BR'):mapInd===1?(st.emp2/1e6).toFixed(2)+'M':(st.emp/1e6).toFixed(2)+'M';
+  const sorted=[...ST].sort((a,b)=>b[key]-a[key]).slice(0,5);
+  document.getElementById('top5').innerHTML=sorted.map((st,i)=>`<div class="t5-item"><div class="t5-head"><span class="t5-name" style="color:${i===0?'var(--charcoal)':'var(--text-mid)'}">${i+1}. ${st.nome}</span><span style="color:${col};font-weight:700">${fmt(st)}</span></div><div class="prog"><div class="prog-fill" style="width:${(st[key]/maxV)*100}%;background:${col}"></div></div></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INDICADORES
+// ═══════════════════════════════════════════════════════════════════
+function buildInd(){
+  const saldo=SALDO_BY_YR[curAno]||SALDO_BY_YR[2025];
+  const SCOLS_LC=["#FFBA00","#2D2D2D","#0ea5e9","#22c55e","#8b5cf6"];
+  document.getElementById('setorTitle').textContent=`Saldo de Empregos por Setor — ${curAno}`;
+  mk('cSetor',{type:'bar',data:{labels:SETORES,datasets:[{label:'Saldo (mil)',data:saldo.map(Math.abs),backgroundColor:SCOLS_LC.map(c=>c+'cc'),borderColor:SCOLS_LC,borderWidth:2,borderRadius:6}]},options:{...CFG,indexAxis:'y',plugins:{...CFG.plugins,tooltip:{...TT}},scales:{y:GX,x:{...GX}}}});
+  const regSal=REGS.map(r=>{const states=ST.filter(s=>s.r===r);return Math.round(states.reduce((s,x)=>s+x.sal,0)/states.length)});
+  mk('cSalReg',{type:'bar',data:{labels:REGS,datasets:[{label:'Renda Média (R$)',data:regSal,backgroundColor:['rgba(255,186,0,.75)','rgba(139,92,246,.6)','rgba(14,165,233,.6)','rgba(45,45,45,.5)','rgba(34,197,94,.6)'],borderRadius:6}]},options:{...CFG,plugins:{...CFG.plugins,tooltip:{...TT}},scales:{x:GX,y:{...GX,ticks:{...GX.ticks,callback:v=>'R$'+v}}}}});
+  mk('cEmpPie',{type:'doughnut',data:{labels:["Serviços","Comércio","Indústria","Construção","Outros"],datasets:[{data:SEG_P,backgroundColor:SCOLS_LC,borderColor:'#fff',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{color:'#6B6B6B',font:{family:'Inter',size:10},boxWidth:10}},tooltip:{...TT,callbacks:{label:c=>` ${c.label}: ${c.parsed}%`}}}}});
+  const sorted=[...ST].sort((a,b)=>b.emp-a.emp),tot=ST.reduce((s,x)=>s+x.emp,0);
+  document.getElementById('tRanking').innerHTML=`<thead><tr><th>#</th><th>Estado</th><th>Empregados</th><th>Empresas</th><th>Renda</th><th>Saldo</th><th>Part.</th></tr></thead><tbody>${sorted.map((st,i)=>{const p=((st.emp/tot)*100).toFixed(1),rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';return`<tr><td><span class="rank ${rc}">${i+1}</span></td><td><span class="st-name">${st.nome}</span> <span class="st-uf">${st.uf}</span></td><td style="color:var(--charcoal);font-weight:600">${(st.emp/1e6).toFixed(2)}M</td><td style="color:var(--text-mid)">${(st.emp2/1e6).toFixed(2)}M</td><td style="color:var(--charcoal);font-weight:600">R$ ${st.sal.toLocaleString('pt-BR')}</td><td style="color:${st.saldo>=0?'var(--green)':'var(--red)'};font-weight:600">${st.saldo>=0?'+':''}${st.saldo.toLocaleString('pt-BR')}</td><td><div class="mini-prog"><div class="mini-bar"><div class="mini-fill" style="width:${p}%"></div></div><span style="color:var(--text-mid);font-size:10px">${p}%</span></div></td></tr>`}).join('')}</tbody>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CRUZADA
+// ═══════════════════════════════════════════════════════════════════
+function buildCruz(){
+  mk('cScatter',{type:'scatter',data:{datasets:[{label:'Estados',data:ST.map(s=>({x:s.emp2/1e6,y:s.emp/1e6,name:s.nome})),backgroundColor:'rgba(255,186,0,.5)',borderColor:'rgba(255,186,0,.9)',borderWidth:1.5,pointRadius:7,pointHoverRadius:11}]},options:{...CFG,plugins:{...CFG.plugins,legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` ${c.raw.name}: ${c.raw.y.toFixed(2)}M emp, ${c.raw.x.toFixed(2)}M emp.`}}},scales:{x:{...GX,title:{display:true,text:'Empresas (M)',color:'#9E9E9E',font:{family:'Inter',size:9}}},y:{...GX,title:{display:true,text:'Empregados (M)',color:'#9E9E9E',font:{family:'Inter',size:9}}}}}});
+  const TND=[{a:2019,sv:33.2,co:29.0,in:19.4,ct:5.8},{a:2020,sv:32.8,co:28.5,in:18.6,ct:5.5},{a:2021,sv:33.8,co:28.8,in:18.8,ct:5.8},{a:2022,sv:34.5,co:28.5,in:18.4,ct:6.0},{a:2023,sv:35.1,co:28.0,in:18.3,ct:6.2},{a:2024,sv:35.6,co:28.4,in:18.2,ct:6.4},{a:2025,sv:36.2,co:28.0,in:17.8,ct:6.8}].filter(t=>t.a<=curAno);
+  mk('cTend',{type:'line',data:{labels:TND.map(t=>t.a),datasets:[
+    {label:'Serviços',data:TND.map(t=>t.sv),borderColor:'#FFBA00',tension:.4,pointRadius:3,fill:false},
+    {label:'Comércio',data:TND.map(t=>t.co),borderColor:'#2D2D2D',tension:.4,pointRadius:3,fill:false},
+    {label:'Indústria',data:TND.map(t=>t.in),borderColor:'#0ea5e9',tension:.4,pointRadius:3,fill:false},
+    {label:'Construção',data:TND.map(t=>t.ct),borderColor:'#8b5cf6',tension:.4,pointRadius:3,fill:false}
+  ]},options:{...CFG,plugins:{...CFG.plugins,tooltip:{...TT}},scales:{x:GX,y:{...GX,ticks:{...GX.ticks,callback:v=>v+'%'}}}}});
+  mk('cSalEmp',{type:'scatter',data:{datasets:[{label:'Estados',data:ST.map(s=>({x:s.emp/1e6,y:s.sal,name:s.nome})),backgroundColor:'rgba(45,45,45,.4)',borderColor:'rgba(45,45,45,.8)',borderWidth:1,pointRadius:6,pointHoverRadius:9}]},options:{...CFG,plugins:{...CFG.plugins,legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` ${c.raw.name}: R$ ${c.raw.y.toLocaleString('pt-BR')}`}}},scales:{x:{...GX,title:{display:true,text:'Empregados (M)',color:'#9E9E9E',font:{family:'Inter',size:9}}},y:{...GX,title:{display:true,text:'Renda (R$)',color:'#9E9E9E',font:{family:'Inter',size:9}}}}}});
+  const mr=[{reg:"Sudeste",col:"#FFBA00"},{reg:"Sul",col:"#0ea5e9"},{reg:"Nordeste",col:"#8b5cf6"},{reg:"Centro-Oeste",col:"#2D2D2D"},{reg:"Norte",col:"#22c55e"}];
+  document.getElementById('tMatriz').innerHTML=`<thead><tr><th>Região</th><th>Empregados</th><th>Renda Média</th><th>Empresas</th></tr></thead><tbody>${mr.map(r=>{const sts=ST.filter(s=>s.r===r.reg);const emp=sts.reduce((s,x)=>s+x.emp,0);const sal=Math.round(sts.reduce((s,x)=>s+x.sal,0)/sts.length);const e2=sts.reduce((s,x)=>s+x.emp2,0);return`<tr><td style="color:${r.col};font-family:Montserrat;font-weight:800">${r.reg}</td><td style="color:var(--charcoal);font-weight:600">${(emp/1e6).toFixed(2)}M</td><td style="font-weight:600">R$ ${sal.toLocaleString('pt-BR')}</td><td style="color:var(--text-mid)">${(e2/1e6).toFixed(2)}M</td></tr>`}).join('')}</tbody>`;
+}
+// ═══════════════════════════════════════════════════════════════════
+// REGIÕES POR ESTADO — LECARD THEME
+// ═══════════════════════════════════════════════════════════════════
+let selState=null,regInd=0;
+function buildRegioesPage(){
+  if(document.getElementById('stateChips').children.length>0)return;
+  const chips=document.getElementById('stateChips');
+  const groups={Sudeste:["SP","RJ","MG","ES"],Sul:["RS","SC","PR"],Nordeste:["BA","CE","PE","MA","PB","RN","AL","SE","PI"],"Centro-Oeste":["GO","DF","MT","MS"],Norte:["AM","PA","TO","RO","AC","RR","AP"]};
+  Object.entries(groups).forEach(([reg,ufs])=>{
+    ufs.forEach(uf=>{
+      const st=ST.find(s=>s.uf===uf);if(!st)return;
+      const btn=document.createElement('button');btn.className='state-chip';btn.id='chip-'+uf;
+      btn.textContent=uf+' — '+st.nome;
+      btn.onclick=()=>selectState(uf);
+      chips.appendChild(btn);
+    });
+  });
+}
+function selectState(uf){
+  if(!MUNI_DATA[uf])return;selState=uf;
+  document.querySelectorAll('.state-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('chip-'+uf).classList.add('selected');
+  document.getElementById('regEmpty').style.display='none';
+  document.getElementById('regIndWrap').style.display='block';
+  document.getElementById('regKpis').style.display='block';
+  renderRegState();
+}
+function setRegInd(i){regInd=i;[0,1,2,3].forEach(j=>{document.getElementById('rib'+j).className='rib'+(j===i?' ri'+i:'')});renderRegState()}
+function muniHeatColor(val,max,ind){
+  const r=Math.max(0.05,Math.min(1,val/max));
+  if(ind===0)return`hsl(45,${50+r*48}%,${88-r*42}%)`;
+  if(ind===1)return`hsl(199,${40+r*55}%,${88-r*45}%)`;
+  if(ind===2)return`hsl(0,0%,${88-r*52}%)`;
+  return'#8b5cf6';
+}
+function renderRegState(){
+  const d=MUNI_DATA[selState];if(!d)return;
+  const me=YR_MULT[curAno]||1,se=YR_SAL[curAno]||1,ee=YR_EMP2[curAno]||1;
+  const topMuni=[...d.munis].sort((a,b)=>b.emp-a.emp)[0];
+  const infoEmp=Math.round(d.info.emp*me),infoEmp2=Math.round(d.info.emp2*ee),infoSal=Math.round(d.info.sal*se);
+  document.getElementById('regKpiRow').innerHTML=`
+    <div class="skpi"><div class="skpi-val" style="color:var(--yellow-dark)">${(infoEmp/1e6).toFixed(2)}M</div><div class="skpi-lbl">Empregados</div></div>
+    <div class="skpi"><div class="skpi-val" style="color:var(--cyan)">${(infoEmp2/1e6).toFixed(2)}M</div><div class="skpi-lbl">Empresas</div></div>
+    <div class="skpi"><div class="skpi-val" style="color:var(--charcoal)">R$${infoSal.toLocaleString('pt-BR')}</div><div class="skpi-lbl">Renda Média</div></div>
+    <div class="skpi"><div class="skpi-val" style="color:var(--purple);font-size:16px">${topMuni.n}</div><div class="skpi-lbl">Líder</div></div>`;
+  const indNames=['Empregados','Empresas','Renda Média','Setor Dominante'];
+  document.getElementById('regMapTitle').textContent=`${d.nome} — ${indNames[regInd]} (${curAno})`;
+  buildTreemap(d);buildMuniRanking(d);buildRegSetor(d);buildRegTrend(d);buildMuniComp(d);
+  if(regInd<3){
+    const keys=['emp','emp2','sal'];const mults=[me,ee,se];
+    const vals=d.munis.map(m=>Math.round(m[keys[regInd]]*mults[regInd]));const maxV=Math.max(...vals);
+    const lsS=document.getElementById('lsSegs');lsS.innerHTML='';
+    for(let i=0;i<10;i++){const seg=document.createElement('div');seg.className='ls-seg';seg.style.background=muniHeatColor((i/9)*maxV,maxV,regInd);lsS.appendChild(seg)}
+    const lsL=document.getElementById('lsLabels');
+    const fV=v=>regInd===2?'R$'+Math.round(v/100)*100:(v/1e3).toFixed(0)+'k';
+    lsL.innerHTML=`<span>${fV(Math.min(...vals))}</span><span>${fV(maxV/2)}</span><span>${fV(maxV)}</span>`;
+  }else{document.getElementById('lsSegs').innerHTML='';document.getElementById('lsLabels').innerHTML='<span style="color:var(--text-dim);font-size:10px">Cor = Setor</span>'}
+}
+function layoutTreemap(items,x,y,w,h,total){
+  if(!items.length)return[];if(items.length===1)return[{...items[0],x,y,w,h}];
+  let sum=0;const half=total/2;let split=1;
+  for(let i=0;i<items.length-1;i++){sum+=items[i].value;if(sum>=half){split=i+1;break}}
+  const g1=items.slice(0,split),g2=items.slice(split);
+  const s1=g1.reduce((s,it)=>s+it.value,0),s2=g2.reduce((s,it)=>s+it.value,0);const f1=s1/total;
+  if(w>=h)return[...layoutTreemap(g1,x,y,w*f1,h,s1),...layoutTreemap(g2,x+w*f1,y,w*(1-f1),h,s2)];
+  return[...layoutTreemap(g1,x,y,w,h*f1,s1),...layoutTreemap(g2,x,y+h*f1,w,h*(1-f1),s2)];
+}
+function buildTreemap(d){
+  const container=document.getElementById('muniTreemap');container.innerHTML='';
+  const ind=regInd;const keys=['emp','emp2','sal'];
+  const me=YR_MULT[curAno]||1,se=YR_SAL[curAno]||1,ee=YR_EMP2[curAno]||1;const mults=[me,ee,se];
+  const munis=[...d.munis].sort((a,b)=>b.emp-a.emp);
+  const vals=munis.map(m=>ind===3?Math.round(m.emp*me):Math.round(m[keys[ind]]*mults[ind]));
+  const maxV=Math.max(...vals);const totalVal=vals.reduce((s,v)=>s+v,0);
+  const items=munis.map((m,i)=>({...m,value:vals[i],empA:Math.round(m.emp*me),emp2A:Math.round(m.emp2*ee),salA:Math.round(m.sal*se)}));
+  const W=container.offsetWidth||480,H=400;container.style.height=H+'px';
+  const rects=layoutTreemap(items,0,0,W,H,totalVal);
+  rects.forEach(r=>{
+    const col=ind===3?(SETOR_COLS[r.set]||'#8b5cf6'):muniHeatColor(r.value,maxV,ind);
+    const cell=document.createElement('div');cell.className='tm-cell';
+    cell.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:${col};`;
+    const minDim=Math.min(r.w,r.h);
+    if(minDim>30){const lbl=document.createElement('div');lbl.className='tm-label';lbl.style.fontSize=(minDim>80?'12':'9')+'px';lbl.textContent=r.n;cell.appendChild(lbl)}
+    if(minDim>50){const vl=document.createElement('div');vl.className='tm-val';vl.textContent=ind===2?'R$ '+r.salA.toLocaleString('pt-BR'):ind===1?(r.emp2A/1e3).toFixed(0)+'k':ind===3?r.set:(r.empA/1e3).toFixed(0)+'k';cell.appendChild(vl)}
+    cell.addEventListener('mouseenter',()=>{showMuniTt(r,d)});
+    cell.addEventListener('mouseleave',()=>{document.getElementById('muniTt').classList.remove('show')});
+    container.appendChild(cell);
+  });
+}
+function showMuniTt(m,d){
+  const me=YR_MULT[curAno]||1,se=YR_SAL[curAno]||1,ee=YR_EMP2[curAno]||1;
+  document.getElementById('mt-name').textContent=m.n;
+  document.getElementById('mt-sub').textContent=m.m+' · '+d.nome;
+  document.getElementById('mt-emp').textContent=(m.empA/1e3).toFixed(0)+'k';
+  document.getElementById('mt-emp2').textContent=(m.emp2A/1e3).toFixed(1)+'k';
+  document.getElementById('mt-sal').textContent='R$ '+m.salA.toLocaleString('pt-BR');
+  document.getElementById('mt-set').textContent=m.set;
+  document.getElementById('muniTt').classList.add('show');
+  const infoSal=Math.round(d.info.sal*se);
+  document.getElementById('regInsight').innerHTML=`📍 <b style="color:var(--charcoal)">${m.n}</b>: ${((m.empA/Math.round(d.info.emp*(YR_MULT[curAno]||1)))*100).toFixed(1)}% do estado. Salário ${m.salA>infoSal?'<b style="color:var(--green)">acima</b>':'<b style="color:var(--red)">abaixo</b>'} da média. Setor: <b style="color:${SETOR_COLS[m.set]||'#FFBA00'}">${m.set}</b>.`;
+}
+function buildMuniRanking(d){
+  const me=YR_MULT[curAno]||1,se=YR_SAL[curAno]||1,ee=YR_EMP2[curAno]||1;
+  const ind=regInd,keys=['emp','emp2','sal','set'],key=keys[Math.min(ind,2)];
+  const col=['var(--yellow-dark)','var(--cyan)','var(--charcoal)','var(--purple)'][ind];
+  const adjusted=d.munis.map(m=>({...m,empA:Math.round(m.emp*me),emp2A:Math.round(m.emp2*ee),salA:Math.round(m.sal*se)}));
+  const keyA=key==='emp'?'empA':key==='emp2'?'emp2A':'salA';
+  const maxV=Math.max(...adjusted.map(m=>m[keyA]));
+  const fmt=m=>ind===2?'R$ '+m.salA.toLocaleString('pt-BR'):ind===1?(m.emp2A/1e3).toFixed(0)+'k':ind===3?m.set:(m.empA/1e3).toFixed(0)+'k';
+  const sorted=[...adjusted].sort((a,b)=>ind===3?0:b[keyA]-a[keyA]).slice(0,8);
+  document.getElementById('muniRanking').innerHTML=sorted.map((m,i)=>`<div class="mr-item"><span class="mr-num" style="${i<3?'color:var(--yellow-dark)':''}">${i+1}</span><span class="mr-name">${m.n}</span><div class="mr-bar-wrap"><div class="mr-bar"><div class="mr-fill" style="width:${ind===3?100:(m[keyA]/maxV)*100}%;background:${ind===3?(SETOR_COLS[m.set]||col):col}"></div></div></div><span style="color:${ind===3?(SETOR_COLS[m.set]||col):col};font-weight:600;font-size:10px;min-width:55px;text-align:right">${fmt(m)}</span></div>`).join('');
+}
+function buildRegSetor(d){
+  const SCOLS_LC=["#FFBA00","#2D2D2D","#0ea5e9","#22c55e","#8b5cf6","#ef4444"];
+  if(CH.cRegSetor)CH.cRegSetor.destroy();CH.cRegSetor=new Chart(document.getElementById('cRegSetor'),{type:'doughnut',data:{labels:["Comércio","Serviços","Indústria","Agroneg.","Construção","TI/Outros"],datasets:[{data:d.setores,backgroundColor:SCOLS_LC,borderColor:'#fff',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{color:'#6B6B6B',font:{family:'Inter',size:9},boxWidth:9,padding:7}},tooltip:{...TT,callbacks:{label:c=>` ${c.label}: ${c.parsed}%`}}}}})}
+function buildRegTrend(d){
+  const trendSlice=d.trend.filter(t=>t.a<=curAno);
+  if(CH.cRegTrend)CH.cRegTrend.destroy();CH.cRegTrend=new Chart(document.getElementById('cRegTrend'),{type:'line',data:{labels:trendSlice.map(t=>t.a),datasets:[
+    {label:'Empregados (M)',data:trendSlice.map(t=>t.emp),borderColor:'#FFBA00',backgroundColor:'rgba(255,186,0,.08)',fill:true,tension:.4,pointRadius:4},
+    {label:'Renda (R$/100)',data:trendSlice.map(t=>Math.round(t.sal/100)),borderColor:'#2D2D2D',fill:false,tension:.4,yAxisID:'y1',pointRadius:4}
+  ]},options:{...CFG,scales:{x:GX,y:{...GX},y1:{ticks:{color:"#9E9E9E",font:{family:"Inter",size:9}},grid:{color:"transparent"},position:'right'}}}})}
+function buildMuniComp(d){
+  const me=YR_MULT[curAno]||1,se=YR_SAL[curAno]||1;
+  if(CH.cMuniComp)CH.cMuniComp.destroy();
+  const top=[...d.munis].sort((a,b)=>b.emp-a.emp).slice(0,8);
+  CH.cMuniComp=new Chart(document.getElementById('cMuniComp'),{type:'bar',data:{
+    labels:top.map(m=>m.n.length>10?m.n.slice(0,9)+'…':m.n),
+    datasets:[
+      {label:'Emp (k)',data:top.map(m=>Math.round(m.emp*me/1000)),backgroundColor:'rgba(255,186,0,.75)',borderRadius:4},
+      {label:'Renda/100',data:top.map(m=>Math.round(m.sal*se/100)),backgroundColor:'rgba(45,45,45,.5)',borderRadius:4,yAxisID:'y1'}
+    ]},options:{...CFG,scales:{x:GX,y:{...GX},y1:{ticks:{color:"#9E9E9E",font:{family:"Inter",size:9}},grid:{color:"transparent"},position:'right'}}}})}
+
+buildDash();
+</script>
+</body>
+</html>
